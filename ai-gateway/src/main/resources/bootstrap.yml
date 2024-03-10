@@ -1,0 +1,56 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: http://115.159.84.201:8848
+      #        username: nacos
+      #        password: nacos
+      config:
+        server-addr: http://115.159.84.201:8848
+    compatibility-verifier:
+      enabled: false
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':                # 匹配所有请求
+            allowedOrigins:    # 跨域处理 允许所有的域
+              - "http://localhost:8080"
+            allowedMethods:      # 支持的方法
+              - "GET"
+              - "POST"
+              - "DELETE"
+              - "PUT"
+              - "OPTIONS"
+            allowedOriginPatterns: "*"
+            allowCredentials: true
+      default-filters:
+        - DedupeResponseHeader=Vary Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      routes:
+        - id: auth_route             # 认证授权服务
+          uri: lb://ai-auth   # 需要转发的地址
+          predicates:
+            - Path=/auth-service/**
+          filters:
+            - StripPrefix=1     # 转发之前去掉第一层的路径
+        - id: notify_route          # 通知服务
+          uri: lb://ai-notify   # 需要转发的地址
+          predicates:
+            - Path=/notify-service/**
+          filters:
+            - StripPrefix=1     # 转发之前去掉第一层的路径
+        - id: chat_route             # 聊天对话服务
+          uri: lb://ai-chat   # 需要转发的地址
+          predicates:
+            - Path=/chat-service/**
+          filters:
+            - StripPrefix=1     # 转发之前去掉第一层的路径
+      discovery:
+        locator:
+          enabled: true
+  application:
+    name: ai-gateway
+  main:
+    web-application-type: reactive
+server:
+  port: 80
+
