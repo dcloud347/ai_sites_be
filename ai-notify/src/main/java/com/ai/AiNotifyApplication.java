@@ -1,16 +1,13 @@
-package com.ai.gateway;
+package com.ai;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-/**
- * @author 刘晨
- */
 @SpringBootApplication
-public class AiGatewayApplication {
+public class AiNotifyApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AiGatewayApplication.class, args);
+        SpringApplication.run(AiNotifyApplication.class, args);
     }
 
 }

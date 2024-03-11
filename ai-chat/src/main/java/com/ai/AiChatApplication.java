@@ -1,13 +1,13 @@
-package com.ai.notify;
+package com.ai;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AiNotifyApplication {
+public class AiChatApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AiNotifyApplication.class, args);
+        SpringApplication.run(AiChatApplication.class, args);
     }
 
 }

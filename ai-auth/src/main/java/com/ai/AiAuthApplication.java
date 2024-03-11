@@ -1,13 +1,16 @@
-package com.ai.chat;
+package com.ai;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/**
+ * @author 刘晨
+ */
 @SpringBootApplication
-public class AiChatApplication {
+public class AiAuthApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AiChatApplication.class, args);
+        SpringApplication.run(AiAuthApplication.class, args);
     }
 
 }

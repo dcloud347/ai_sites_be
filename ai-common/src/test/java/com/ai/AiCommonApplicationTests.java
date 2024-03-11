@@ -1,10 +1,10 @@
-package com.ai.auth;
+package com.ai;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class AiAuthApplicationTests {
+class AiCommonApplicationTests {
 
     @Test
     void contextLoads() {

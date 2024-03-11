@@ -1,4 +1,4 @@
-package com.ai.gateway.filter;
+package com.ai.filter;
 
 
 import org.springframework.http.HttpHeaders;

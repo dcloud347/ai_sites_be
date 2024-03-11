@@ -1,4 +1,4 @@
-package com.ai.auth;
+package com.ai;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -7,10 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author 刘晨
  */
 @SpringBootApplication
-public class AiAuthApplication {
+public class AiGatewayApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(AiAuthApplication.class, args);
+        SpringApplication.run(AiGatewayApplication.class, args);
     }
 
 }
