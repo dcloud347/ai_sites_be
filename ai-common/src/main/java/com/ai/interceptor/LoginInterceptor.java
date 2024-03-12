@@ -5,11 +5,12 @@ import com.ai.model.LoginEntity;
 import com.ai.enums.RedisPrefixEnum;
 import com.ai.util.CommonUtil;
 import com.ai.util.Result;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author 刘晨

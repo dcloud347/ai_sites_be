@@ -1,10 +1,11 @@
 package com.ai.config;
 
 import com.ai.enums.RedisPrefixEnum;
-import jakarta.websocket.HandshakeResponse;
-import jakarta.websocket.server.HandshakeRequest;
-import jakarta.websocket.server.ServerEndpointConfig;
 import org.springframework.data.redis.core.StringRedisTemplate;
+
+import javax.websocket.HandshakeResponse;
+import javax.websocket.server.HandshakeRequest;
+import javax.websocket.server.ServerEndpointConfig;
 
 /**
  * @author 刘晨

@@ -3,15 +3,17 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-    url: jdbc:mysql://aisites.mysql.database.azure.com/ai?useSSL=true&requireSSL=true
+    url: jdbc:mysql://aisites.mysql.database.azure.com/ai?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: ai_admin
     password: A1SiT3_$0rkSW4lLbl
     hikari:
       max-lifetime: 120000
-  redis:
-    host: 115.159.84.201
-    password: liu2138965992
-    database: 4
+  data:
+    redis:
+      host: 115.159.84.201
+      password: liu2138965992
+      database: 4
+
   servlet:
     multipart:
       max-file-size: 10MB        # 设置单个文件最大大小为10MB
@@ -27,7 +29,14 @@ spring:
     compatibility-verifier:
       enabled: false
   application:
-    name: ai-auth
+    name: ai-notify
+  mail:
+    host: smtp.qq.com # QQ邮箱smtp主机
+    port: 587 #端口号465或587
+    username: 2138965992@qq.com
+    password: wdigahkjcnakecbd  # 这里QQ邮箱开通POP3/SMTP提供的授权码，如果邮箱服务商没有授权码，可以使用密码代替
+    protocol: smtp
+    default-encoding: UTF-8
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
@@ -36,7 +45,7 @@ mybatis-plus:
       id-type: auto
 
 server:
-  port: 8010
+  port: 8000
   tomcat:
     max-swallow-size: 500MB
 

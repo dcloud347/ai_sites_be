@@ -1,12 +1,15 @@
 package com.ai.entity;
 
+import com.ai.dto.LoginDto;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 import java.time.LocalDate;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.springframework.util.DigestUtils;
 
 /**
  * <p>
@@ -19,6 +22,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
+@NoArgsConstructor
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -50,4 +54,16 @@ public class User implements Serializable {
      * 积分
      */
     private Integer point;
+
+    public LocalDate getCreateDate() {
+        if (createDate == null){
+            createDate = LocalDate.now();
+        }
+        return createDate;
+    }
+
+    public User (LoginDto loginDto){
+        email = loginDto.getEmail();
+        password = DigestUtils.md5DigestAsHex(loginDto.getPassword().getBytes());
+    }
 }
