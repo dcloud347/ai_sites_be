@@ -21,6 +21,6 @@ public class GlobalExceptionHandler {
                 message.append(";");
             }
         }
-        return Result.error().setMessage(message.toString());
+        return Result.error(message.toString());
     }
 }

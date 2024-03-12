@@ -86,18 +86,5 @@ public class JwtUtil {
         }
         return claims;
     }
-
-    public static void main(String[] args) {
-
-        HashMap<String, Object> map1 = new HashMap<>();
-        map1.put("id", "2");
-        String jwtToken = generateJwtToken(map1);
-        System.out.println("JWT Token " + jwtToken);
-        System.out.println("=======================================================");
-//        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzcHpoYW5nIiwic3ViIjoiemhhbmdzcCIsImlkIjoiMiIsImV4cCI6MTY5NjgxOTM1NSwiaWF0IjoxNjk1MDkxMzU1LCJqdGkiOiI3MWUwZDVlMi0wNWM5LTQyM2ItYjdlZC00MjcyMThmMGRhZmUifQ.EMAjWH7_dZXQlqMXBs6plR9B0larKyk175pAU55Fz-k"
-        Claims claims = getClaimsFromJwt("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzcHpoYW5nIiwic3ViIjoiemhhbmdzcCIsImlkIjoiMiIsImV4cCI6MTY5NjgxOTM1NSwiaWF0IjoxNjk1MDkxMzU1LCJqdGkiOiI3MWUwZDVlMi0wNWM5LTQyM2ItYjdlZC00MjcyMThmMGRhZmUifQ.EMAjWH7_dZXQlqMXBs6plR9B0larKyk175pAU55Fz-k");
-        System.out.println(claims);
-        System.out.println(claims.get("phone"));
-    }
 }
 

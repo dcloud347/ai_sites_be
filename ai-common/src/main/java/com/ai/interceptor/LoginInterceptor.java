@@ -28,7 +28,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler){
         String accessToken = request.getHeader("token");
         if(accessToken == null) {
-            CommonUtil.sendJsonMessage(response, Result.error().setMessage("未登录"));
+            CommonUtil.sendJsonMessage(response, Result.error("未登录"));
             return false;
         }
         String user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.USER_TOKEN.getPrefix() + accessToken);
@@ -42,7 +42,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             threadLocal.set(loginEntity);
             return true;
         }
-        CommonUtil.sendJsonMessage(response, Result.error().setMessage("未登录"));
+        CommonUtil.sendJsonMessage(response, Result.error("未登录"));
         return false;
     }
     @Override

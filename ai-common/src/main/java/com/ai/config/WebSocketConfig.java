@@ -31,7 +31,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/chat");
     }
 
-    @Bean
+//    @Bean
     public ServerEndpointExporter serverEndpointExporter(){
         return new ServerEndpointExporter();
     }

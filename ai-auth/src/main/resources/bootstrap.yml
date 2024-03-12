@@ -1,0 +1,44 @@
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  datasource:
+    url: jdbc:mysql://aisites.mysql.database.azure.com/ai?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ai_admin
+    password: A1SiT3_$0rkSW4lLbl
+    hikari:
+      max-lifetime: 120000
+  data:
+    redis:
+      host: 115.159.84.201
+      password: liu2138965992
+      database: 4
+
+  servlet:
+    multipart:
+      max-file-size: 10MB        # 设置单个文件最大大小为10MB
+      max-request-size: 100MB    # 设置多个文件大小为100MB
+  cloud:
+    nacos:
+      discovery:
+        server-addr: http://115.159.84.201:8848
+      #        username: nacos
+      #        password: nacos
+      config:
+        server-addr: http://115.159.84.201:8848
+    compatibility-verifier:
+      enabled: false
+  application:
+    name: ai-auth
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+
+server:
+  port: 200
+  tomcat:
+    max-swallow-size: 500MB
+
