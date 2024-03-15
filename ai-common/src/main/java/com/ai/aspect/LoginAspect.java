@@ -1,18 +1,24 @@
 package com.ai.aspect;
 
 import com.ai.annotation.LoginRequired;
-import com.ai.interceptor.LoginInterceptor;
+import com.ai.enums.RedisPrefixEnum;
 import com.ai.model.LoginEntity;
 import com.ai.util.CommonUtil;
 import com.ai.util.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author 刘晨
@@ -20,7 +26,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Aspect
 @Component
 public class LoginAspect {
+    public static ThreadLocal<LoginEntity> threadLocal = new ThreadLocal<>();
 
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
     @Pointcut("@annotation(com.ai.annotation.LoginRequired)")
     public void loginRequired() {
         // 定义切点
@@ -28,19 +37,34 @@ public class LoginAspect {
 
     @Around("loginRequired()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
-        // 从LoginInterceptor的ThreadLocal中获取登录信息
-        LoginEntity loginEntity = LoginInterceptor.threadLocal.get();
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attributes.getRequest();
+        HttpServletResponse response = attributes.getResponse();
 
-        if (loginEntity == null) {
-            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            // 获取响应对象，用于返回错误信息
-            if (attrs != null && attrs.getResponse() != null) {
-                CommonUtil.sendJsonMessage(attrs.getResponse(), Result.error("未登录"));
-            }
-            return null; // 直接返回，不再继续执行方法
+        String accessToken = request.getHeader("token");
+        if(accessToken == null) {
+            CommonUtil.sendJsonMessage(response, Result.error("未登录"));
+            return false;
         }
-        // 如果已经登录，则继续执行方法
-        return joinPoint.proceed();
+        String user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.USER_TOKEN.getPrefix() + accessToken);
+        if(user_id != null){
+            LoginEntity loginEntity = new LoginEntity();
+            loginEntity.setUserId(Long.parseLong(user_id));
+            //通过attribute传递用户信息
+            //request.setAttribute("loginUser",loginUser);
+            //通过threadLocal传递用户登录信息
+            threadLocal.set(loginEntity);
+            // 如果已经登录，则继续执行方法
+            return joinPoint.proceed();
+        }
+        CommonUtil.sendJsonMessage(response, Result.error("未登录"));
+        return false;
+    }
+
+    @After("loginRequired()")
+    public void afterLoginRequiredMethods() {
+        // 确保在方法执行完毕后清理ThreadLocal
+        threadLocal.remove();
     }
 }
 
