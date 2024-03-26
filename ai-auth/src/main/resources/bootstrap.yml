@@ -3,9 +3,9 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-    url: jdbc:mysql://aisites.mysql.database.azure.com/ai?useSSL=true&requireSSL=true&ServerTimeZone=UTC
-    username: ai_admin
-    password: A1SiT3_$0rkSW4lLbl
+    url: jdbc:mysql://115.159.84.201:3306/ai?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ai
+    password: liu2138965992
     hikari:
       max-lifetime: 120000
   redis:

@@ -8,6 +8,6 @@ import lombok.Data;
 @Data
 public class LoginEntity {
 
-    private long userId;
+    private int userId;
 
 }

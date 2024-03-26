@@ -49,7 +49,7 @@ public class LoginAspect {
         String user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.USER_TOKEN.getPrefix() + accessToken);
         if(user_id != null){
             LoginEntity loginEntity = new LoginEntity();
-            loginEntity.setUserId(Long.parseLong(user_id));
+            loginEntity.setUserId(Integer.parseInt(user_id));
             //通过attribute传递用户信息
             //request.setAttribute("loginUser",loginUser);
             //通过threadLocal传递用户登录信息

@@ -1,6 +1,9 @@
 package com.ai.service;
 
+import com.ai.dto.ChatDto;
 import com.ai.entity.Message;
+import com.ai.util.Result;
+import com.ai.vo.ChatVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -13,4 +16,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IMessageService extends IService<Message> {
 
+    Result<ChatVo> chat(ChatDto chatDto);
 }
