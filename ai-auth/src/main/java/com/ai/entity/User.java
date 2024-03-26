@@ -62,8 +62,14 @@ public class User implements Serializable {
         return createDate;
     }
 
+    /**
+     * 用户名
+     */
+    private String username;
+
     public User (LoginDto loginDto){
         email = loginDto.getEmail();
+        username = loginDto.getUsername();
         password = DigestUtils.md5DigestAsHex(loginDto.getPassword().getBytes());
     }
 }

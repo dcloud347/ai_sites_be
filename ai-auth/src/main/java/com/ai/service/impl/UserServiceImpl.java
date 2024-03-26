@@ -32,11 +32,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public Result<LoginVo> login(LoginDto loginDto) {
         User user = new User(loginDto);
-        User one = this.getOne(new QueryWrapper<User>().eq("email", user.getEmail()).eq("password", user.getPassword()));
-        if (one == null){
-            return Result.error("邮箱未注册或密码错误");
+        User one = this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
+        User one1 = this.getOne(new QueryWrapper<User>().eq("username", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
+        if (one == null && one1 == null){
+            return Result.error("账号或密码错误");
         }
-        return Result.success(new LoginVo(genToken(one)));
+        return Result.success(one1 == null ? new LoginVo(genToken(one)) : new LoginVo(genToken(one1)));
     }
 
     @Override
@@ -49,6 +50,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 查询该邮箱是否已经注册
         if (this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmail())) != null){
             return Result.error("邮箱已注册");
+        }
+        User user = new User(loginDto);
+        this.save(user);
+        return Result.success(new LoginVo(genToken(user)));
+    }
+
+    @Override
+    public Result<LoginVo> registerByUsername(LoginDto loginDto) {
+        // 查询该用户名是否已经注册
+        if (this.getOne(new QueryWrapper<User>().eq("username", loginDto.getUsername())) != null){
+            return Result.error("用户名已存在");
         }
         User user = new User(loginDto);
         this.save(user);

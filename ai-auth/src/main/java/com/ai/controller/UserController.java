@@ -56,4 +56,12 @@ public class UserController {
     public Result<LoginVo> register(@RequestBody LoginDto loginDto){
         return userService.register(loginDto);
     }
+
+    /**
+     * 账号密码注册
+     */
+    @PostMapping("registerByUsername")
+    public Result<LoginVo> registerByUsername(@RequestBody LoginDto loginDto){
+        return userService.registerByUsername(loginDto);
+    }
 }

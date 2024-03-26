@@ -69,7 +69,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             this.list(queryWrapper).forEach(message -> list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), message.getContent())));
         }
         list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", chatDto.getContent()));
-        System.out.println(list);
+
         // 发送消息
         String chat = gpt3Util.chat(list, model);
         System.out.println(chat);

@@ -10,6 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LoginDto {
     /**
+     * 用户名
+     */
+    private String username;
+
+    /**
      * 邮箱
      */
     private String email;
@@ -23,5 +28,7 @@ public class LoginDto {
      * 验证码
      */
     private String code;
+
+    private String emailOrUsername;
 
 }

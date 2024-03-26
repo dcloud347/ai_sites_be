@@ -19,4 +19,6 @@ public interface IUserService extends IService<User> {
     Result<LoginVo> login(LoginDto loginDto);
 
     Result<LoginVo> register(LoginDto loginDto);
+
+    Result<LoginVo> registerByUsername(LoginDto loginDto);
 }
