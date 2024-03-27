@@ -10,6 +10,7 @@ import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
+import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -94,5 +95,13 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         message1.setUserId(loginEntity.getUserId()).setRole(role);
         this.save(message1);
         return Result.success(chatVo);
+    }
+
+    @Override
+    public Result<List<ChatRecordVo>> record(String id) {
+        ArrayList<ChatRecordVo> chatRecordVos = new ArrayList<>();
+        List<Message> messages = this.list(new QueryWrapper<Message>().eq("session_id", id));
+        messages.forEach(message -> chatRecordVos.add(new ChatRecordVo(message)));
+        return Result.success(chatRecordVos);
     }
 }

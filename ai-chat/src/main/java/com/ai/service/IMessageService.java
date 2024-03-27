@@ -3,8 +3,11 @@ package com.ai.service;
 import com.ai.dto.ChatDto;
 import com.ai.entity.Message;
 import com.ai.util.Result;
+import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -17,4 +20,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface IMessageService extends IService<Message> {
 
     Result<ChatVo> chat(ChatDto chatDto);
+
+    Result<List<ChatRecordVo>> record(String id);
 }
