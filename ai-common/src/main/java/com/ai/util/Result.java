@@ -17,6 +17,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
+@Accessors(chain = true)
 public class Result<T> implements Serializable {
 
     private static final long serialVersionUID = 1175720458347412087L;

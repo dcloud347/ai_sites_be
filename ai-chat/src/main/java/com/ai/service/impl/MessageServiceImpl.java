@@ -46,10 +46,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Override
     public Result<ChatVo> chat(ChatDto chatDto) {
         String model;
-        if ("gpt3.5".equals(chatDto.getMode())){
-            model = "gpt-3.5-turbo";
-        }else {
-            return Result.error("不认识的模型" + chatDto.getMode());
+        switch (chatDto.getMode()){
+            case "gpt3.5" -> model = "gpt-3.5-turbo";
+            case "gpt4" -> model = "gpt-4-turbo-preview";
+            case "dall3" -> model = "dall-e-3";
+            default -> {return Result.error("不认识的模型" + chatDto.getMode());}
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ArrayList<String> list = new ArrayList<>();
@@ -78,6 +79,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             return Result.error("网络异常");
         }
         JSONObject jsonObject = JSON.parseObject(chat);
+        if (jsonObject.getJSONObject("error") != null){
+            return Result.error(jsonObject.getJSONObject("error").get("message").toString());
+        }
         JSONArray choices = jsonObject.getJSONArray("choices");
         JSONObject choice = choices.getJSONObject(0);
         JSONObject msg = choice.getJSONObject("message");

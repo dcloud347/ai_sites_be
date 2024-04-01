@@ -24,7 +24,8 @@ import java.util.Map;
 @Component
 public class Gpt3Util {
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
-    private static final String API_KEY = "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"; // 将API_KEY替换成你的API密钥
+    // 将API_KEY替换成你的API密钥
+    private static final String API_KEY = "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";
     public String chat(List<String> conversationHistory, String model){
         // 准备JSON数据
         String jsonData = String.format("""
@@ -40,7 +41,7 @@ public class Gpt3Util {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URL))
                 .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer "+ API_KEY) // 将YOUR_OPENAI_API_KEY替换成你的API密钥
+                .header("Authorization", "Bearer "+ API_KEY)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonData, StandardCharsets.UTF_8))
                 .build();
 
