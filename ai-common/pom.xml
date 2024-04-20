@@ -178,6 +178,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <classifier>exec</classifier>
+                    <!-- 确保com.example.DummyClass是不存在的，这只是为了满足插件的配置需求-->
+                    <mainClass>com.example.DummyClass</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -1,42 +1,31 @@
+# 开发环境
+env: d6351e73-a3f5-4d49-88a1-d9b1c49487b6
+# 生产环境
+#env: 8056ed5a-a62c-4aa2-aa9b-615bc6764eb3
 spring:
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
-  datasource:
-    url: jdbc:mysql://115.159.84.201:3306/ai?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: ai
-    password: liu2138965992
-    hikari:
-      max-lifetime: 120000
-  redis:
-    host: 115.159.84.201
-    password: liu2138965992
-    database: 4
-  servlet:
-    multipart:
-      max-file-size: 10MB        # 设置单个文件最大大小为10MB
-      max-request-size: 100MB    # 设置多个文件大小为100MB
+  application:
+    name: ai-auth
   cloud:
     nacos:
       discovery:
         server-addr: http://115.159.84.201:8848
+        namespace: ${env}
       #        username: nacos
       #        password: nacos
+      #        enabled: false
       config:
         server-addr: http://115.159.84.201:8848
+        extension-configs[0]:
+          data-id: ${spring.application.name}.yml
+          group: DEFAULT_GROUP
+          refresh: true
+        extension-configs[1]:
+          data-id: common.yml
+          group: DEFAULT_GROUP
+          refresh: true
+
+        file-extension: yml
+        namespace: ${env}
     compatibility-verifier:
       enabled: false
-  application:
-    name: ai-auth
-
-mybatis-plus:
-  mapper-locations: classpath*:/mapper/**/*.xml
-  global-config:
-    db-config:
-      id-type: auto
-
-server:
-  port: 8010
-  tomcat:
-    max-swallow-size: 500MB
 

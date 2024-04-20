@@ -14,7 +14,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/model")
 public class ModelController {
-
     @GetMapping
     public Result<List<String>> getModel(){
         ArrayList<String> list = new ArrayList<>();
