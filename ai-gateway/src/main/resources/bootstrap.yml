@@ -7,12 +7,14 @@ spring:
     nacos:
       discovery:
         namespace: ${env}
-        server-addr: http://115.159.84.201:8848
-      #        username: nacos
-      #        password: nacos
+        server-addr: http://4.234.8.238:8848
+        username: nacos
+        password: nacos
       config:
         namespace: ${env}
-        server-addr: http://115.159.84.201:8848
+        server-addr: http://4.234.8.238:8848
+        username: nacos
+        password: nacos
     compatibility-verifier:
       enabled: false
     gateway:

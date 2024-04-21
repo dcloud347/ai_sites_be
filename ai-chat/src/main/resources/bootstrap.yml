@@ -8,13 +8,13 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: http://115.159.84.201:8848
+        server-addr: http://4.234.8.238:8848
         namespace: ${env}
-      #        username: nacos
-      #        password: nacos
+        username: nacos
+        password: nacos
       #        enabled: false
       config:
-        server-addr: http://115.159.84.201:8848
+        server-addr: http://4.234.8.238:8848
         extension-configs[0]:
           data-id: ${spring.application.name}.yml
           group: DEFAULT_GROUP
@@ -23,7 +23,8 @@ spring:
           data-id: common.yml
           group: DEFAULT_GROUP
           refresh: true
-
+        username: nacos
+        password: nacos
         file-extension: yml
         namespace: ${env}
     compatibility-verifier:
