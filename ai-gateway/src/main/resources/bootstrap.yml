@@ -9,12 +9,12 @@ spring:
         namespace: ${env}
         server-addr: http://4.234.8.238:8848
         username: nacos
-        password: nacos
+        password: A1dMlna_iL_l28@
       config:
         namespace: ${env}
         server-addr: http://4.234.8.238:8848
         username: nacos
-        password: nacos
+        password: A1dMlna_iL_l28@
     compatibility-verifier:
       enabled: false
     gateway:
@@ -60,5 +60,5 @@ spring:
   main:
     web-application-type: reactive
 server:
-  port: 80
+  port: 8080
 

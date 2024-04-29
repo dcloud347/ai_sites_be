@@ -8,6 +8,7 @@ import com.ai.util.Result;
 import com.ai.vo.LoginVo;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -36,7 +37,7 @@ public class UserController {
      * 邮箱-密码登录
      */
     @PostMapping("login")
-    public Result<LoginVo> login(@RequestBody LoginDto loginDto){
+    public ResponseEntity<Result<LoginVo>> login(@RequestBody LoginDto loginDto){
         return userService.login(loginDto);
     }
 
@@ -53,7 +54,7 @@ public class UserController {
      * 邮箱-密码-验证码注册
      */
     @PostMapping("register")
-    public Result<LoginVo> register(@RequestBody LoginDto loginDto){
+    public ResponseEntity<Result<LoginVo>> register(@RequestBody LoginDto loginDto){
         return userService.register(loginDto);
     }
 
@@ -61,7 +62,7 @@ public class UserController {
      * 账号密码注册
      */
     @PostMapping("registerByUsername")
-    public Result<LoginVo> registerByUsername(@RequestBody LoginDto loginDto){
+    public  ResponseEntity<Result<LoginVo>> registerByUsername(@RequestBody LoginDto loginDto){
         return userService.registerByUsername(loginDto);
     }
 }

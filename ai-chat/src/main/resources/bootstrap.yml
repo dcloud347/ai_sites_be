@@ -11,7 +11,7 @@ spring:
         server-addr: http://4.234.8.238:8848
         namespace: ${env}
         username: nacos
-        password: nacos
+        password: A1dMlna_iL_l28@
       #        enabled: false
       config:
         server-addr: http://4.234.8.238:8848
@@ -24,7 +24,7 @@ spring:
           group: DEFAULT_GROUP
           refresh: true
         username: nacos
-        password: nacos
+        password: A1dMlna_iL_l28@
         file-extension: yml
         namespace: ${env}
     compatibility-verifier:

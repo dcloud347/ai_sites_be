@@ -12,10 +12,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 刘晨
@@ -25,7 +28,7 @@ import java.util.Map;
 public class Gpt3Util {
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
     // 将API_KEY替换成你的API密钥
-    private static final String API_KEY = "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";
+    private static final String API_KEY = "sk-proj-Mg57a8TpL6nvzHgfRPeeT3BlbkFJyWgzMEGEDW85zpnl3zg6";
     public String chat(List<String> conversationHistory, String model){
         // 准备JSON数据
         String jsonData = String.format("""
@@ -43,8 +46,8 @@ public class Gpt3Util {
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer "+ API_KEY)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonData, StandardCharsets.UTF_8))
+                .timeout(Duration.ofSeconds(3))
                 .build();
-
         try {
             // 发送请求并获取响应
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());

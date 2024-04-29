@@ -10,6 +10,7 @@ import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
+import com.ai.util.ResultCode;
 import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.alibaba.fastjson.JSON;
@@ -18,6 +19,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -44,13 +46,13 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Resource
     private Gpt3Util gpt3Util;
     @Override
-    public Result<ChatVo> chat(ChatDto chatDto) {
+    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto) {
         String model;
         switch (chatDto.getMode()){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
             case "gpt4" -> model = "gpt-4-turbo-preview";
             case "dall3" -> model = "dall-e-3";
-            default -> {return Result.error("不认识的模型" + chatDto.getMode());}
+            default -> {return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("不认识的模型" + chatDto.getMode()));}
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ArrayList<String> list = new ArrayList<>();
@@ -76,11 +78,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         String chat = gpt3Util.chat(list, model);
         System.out.println(chat);
         if (chat == null){
-            return Result.error("网络异常");
+            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("网络异常"));
         }
         JSONObject jsonObject = JSON.parseObject(chat);
         if (jsonObject.getJSONObject("error") != null){
-            return Result.error(jsonObject.getJSONObject("error").get("message").toString());
+            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error(jsonObject.getJSONObject("error").get("message").toString()));
         }
         JSONArray choices = jsonObject.getJSONArray("choices");
         JSONObject choice = choices.getJSONObject(0);
@@ -98,14 +100,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         Message message1 = new Message(chatVo);
         message1.setUserId(loginEntity.getUserId()).setRole(role);
         this.save(message1);
-        return Result.success(chatVo);
+        return ResponseEntity.ok(Result.success(chatVo));
     }
 
     @Override
-    public Result<List<ChatRecordVo>> record(String id) {
+    public ResponseEntity<Result<List<ChatRecordVo>>> record(String id) {
         ArrayList<ChatRecordVo> chatRecordVos = new ArrayList<>();
         List<Message> messages = this.list(new QueryWrapper<Message>().eq("session_id", id));
         messages.forEach(message -> chatRecordVos.add(new ChatRecordVo(message)));
-        return Result.success(chatRecordVos);
+        return ResponseEntity.ok(Result.success(chatRecordVos));
     }
 }

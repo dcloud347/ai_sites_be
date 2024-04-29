@@ -11,12 +11,12 @@ spring:
         server-addr: http://4.234.8.238:8848
         namespace: ${env}
         username: nacos
-        password: nacos
+        password: A1dMlna_iL_l28@
       #        enabled: false
       config:
         server-addr: http://4.234.8.238:8848
         username: nacos
-        password: nacos
+        password: A1dMlna_iL_l28@
         extension-configs[0]:
           data-id: ${spring.application.name}.yml
           group: DEFAULT_GROUP

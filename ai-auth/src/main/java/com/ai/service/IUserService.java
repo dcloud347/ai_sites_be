@@ -5,6 +5,7 @@ import com.ai.entity.User;
 import com.ai.util.Result;
 import com.ai.vo.LoginVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.http.ResponseEntity;
 
 /**
  * <p>
@@ -16,9 +17,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface IUserService extends IService<User> {
 
-    Result<LoginVo> login(LoginDto loginDto);
+    ResponseEntity<Result<LoginVo>> login(LoginDto loginDto);
 
-    Result<LoginVo> register(LoginDto loginDto);
+    ResponseEntity<Result<LoginVo>> register(LoginDto loginDto);
 
-    Result<LoginVo> registerByUsername(LoginDto loginDto);
+    ResponseEntity<Result<LoginVo>> registerByUsername(LoginDto loginDto);
 }

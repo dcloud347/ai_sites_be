@@ -6,6 +6,7 @@ import com.ai.util.Result;
 import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ import java.util.List;
  */
 public interface IMessageService extends IService<Message> {
 
-    Result<ChatVo> chat(ChatDto chatDto);
+    ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto);
 
-    Result<List<ChatRecordVo>> record(String id);
+    ResponseEntity<Result<List<ChatRecordVo>>> record(String id);
 }
