@@ -96,8 +96,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         // 保存gpt的回复
         ChatVo chatVo = new ChatVo();
         chatVo.setMessage(content).setSessionId(chatDto.getSessionId());
-
         Message message1 = new Message(chatVo);
+        message1.setModel(model);
         message1.setUserId(loginEntity.getUserId()).setRole(role);
         this.save(message1);
         return ResponseEntity.ok(Result.success(chatVo));

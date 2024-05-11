@@ -63,6 +63,10 @@ public class Message implements Serializable {
      */
     private LocalDateTime createTime;
 
+    /**
+     * 模型
+     */
+    private String model;
     public Message(ChatDto chatDto){
         content = chatDto.getContent();
         messageType = chatDto.getMessageType();

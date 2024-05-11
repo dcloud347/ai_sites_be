@@ -46,11 +46,12 @@ public class Gpt3Util {
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer "+ API_KEY)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonData, StandardCharsets.UTF_8))
-                .timeout(Duration.ofSeconds(3))
+//                .timeout(Duration.ofSeconds(3))
                 .build();
         try {
             // 发送请求并获取响应
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response);
             return response.body();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
