@@ -5,6 +5,7 @@ import com.ai.entity.User;
 import com.ai.enums.RedisPrefixEnum;
 import com.ai.mapper.UserMapper;
 import com.ai.service.IUserService;
+import com.ai.util.CommonUtil;
 import com.ai.util.JwtUtil;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
@@ -67,6 +68,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = new User(loginDto);
         this.save(user);
         return ResponseEntity.ok(Result.success(new LoginVo(genToken(user))));
+    }
+
+    @Override
+    public ResponseEntity<Result<LoginDto>> generate() {
+        String username = CommonUtil.generateUUID();
+        String password = CommonUtil.getRandomCode(8);
+        LoginDto loginDto = new LoginDto();
+        loginDto.setUsername(username);
+        loginDto.setPassword(password);
+        User user = new User(loginDto).setType("音箱");
+        this.save(user);
+        return ResponseEntity.ok(Result.success(loginDto));
     }
 
     /**

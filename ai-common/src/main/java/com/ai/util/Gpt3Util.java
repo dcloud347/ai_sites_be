@@ -1,9 +1,5 @@
 package com.ai.util;
 
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import org.apache.ibatis.annotations.Case;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -36,7 +32,6 @@ public class Gpt3Util {
                     "model": "%s",
                     "messages": [%s]
                 }""", model, String.join(",", conversationHistory));
-
         // 创建HttpClient
         HttpClient client = HttpClient.newHttpClient();
 

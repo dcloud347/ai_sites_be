@@ -41,6 +41,9 @@ public class UserController {
         return userService.login(loginDto);
     }
 
+    /**
+     * 发送邮箱验证码
+     */
     @PostMapping("code")
     public Result sendCode(@RequestBody LoginDto loginDto){
         String code = CommonUtil.getRandomCode(4);
@@ -62,7 +65,15 @@ public class UserController {
      * 账号密码注册
      */
     @PostMapping("registerByUsername")
-    public  ResponseEntity<Result<LoginVo>> registerByUsername(@RequestBody LoginDto loginDto){
+    public ResponseEntity<Result<LoginVo>> registerByUsername(@RequestBody LoginDto loginDto){
         return userService.registerByUsername(loginDto);
+    }
+
+    /**
+     * 生成账号密码 （供音箱使用）
+     */
+    @PostMapping("generate")
+    public ResponseEntity<Result<LoginDto>> generate(){
+        return userService.generate();
     }
 }

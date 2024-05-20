@@ -7,4 +7,6 @@ ai/
 |-- ai-notify          通知模块
 |-- ai-chat            聊天模块
 |-- ai-auth            认证授权模块
+|-- ai-background      后台模块
+|-- ai-hardware        硬件对接模块
 ```
