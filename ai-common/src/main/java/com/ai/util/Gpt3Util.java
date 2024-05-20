@@ -34,7 +34,7 @@ public class Gpt3Util {
                 }""", model, String.join(",", conversationHistory));
         // 创建HttpClient
         HttpClient client = HttpClient.newHttpClient();
-
+        System.out.println(jsonData);
         // 构建HttpRequest
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URL))
