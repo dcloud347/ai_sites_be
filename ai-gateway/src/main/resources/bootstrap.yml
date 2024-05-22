@@ -52,6 +52,12 @@ spring:
             - Path=/chat-service/**
           filters:
             - StripPrefix=1     # 转发之前去掉第一层的路径
+        - id: hardware_route             # 硬件服务
+          uri: lb://ai-hardware   # 需要转发的地址
+          predicates:
+            - Path=/hardware-service/**
+          filters:
+            - StripPrefix=1     # 转发之前去掉第一层的路径
       discovery:
         locator:
           enabled: true
