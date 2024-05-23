@@ -38,7 +38,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User one = this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
         User one1 = this.getOne(new QueryWrapper<User>().eq("username", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
         if (one == null && one1 == null){
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("账号或密码错误"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("账号或密码错误"));
         }
         return ResponseEntity.ok(Result.success(one1 == null ? new LoginVo(genToken(one)) : new LoginVo(genToken(one1))));
     }
@@ -48,11 +48,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String code = stringRedisTemplate.opsForValue().get(loginDto.getEmail());
         // 检查验证码
         if (!loginDto.getCode().equals(code)){
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("验证码错误"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("验证码错误"));
         }
         // 查询该邮箱是否已经注册
         if (this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmail())) != null){
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("邮箱已注册"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("邮箱已注册"));
         }
         User user = new User(loginDto);
         this.save(user);
@@ -63,7 +63,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public  ResponseEntity<Result<LoginVo>> registerByUsername(LoginDto loginDto) {
         // 查询该用户名是否已经注册
         if (this.getOne(new QueryWrapper<User>().eq("username", loginDto.getUsername())) != null){
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("用户名已存在"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("用户名已存在"));
         }
         User user = new User(loginDto);
         this.save(user);

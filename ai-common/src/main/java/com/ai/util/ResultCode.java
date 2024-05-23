@@ -7,6 +7,7 @@ public enum ResultCode {
 
     SUCCESS(200, "操作成功"),
     ERROR(500, "操作失败"),
+    BAD_REQUEST(400,"操作被拒绝"),
     BIZ_ERROR(1000, "通用业务异常"),
     FILE_OUT_MAX(9000, "文件超出最大限制"),
     FILE_FORMAT_ERROR(9001, "文件格式不正确"),

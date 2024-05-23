@@ -85,7 +85,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error() {
-        return new Result<T>(ResultCode.ERROR);
+        return new Result<T>(ResultCode.BAD_REQUEST);
     }
 
     /**
@@ -95,7 +95,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error(String msg) {
-        return new Result<T>(ResultCode.ERROR.getCode(), msg);
+        return new Result<T>(ResultCode.BAD_REQUEST.getCode(), msg);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.ai.util;
 
+import com.ai.config.OpenAiConfig;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -24,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class Gpt3Util {
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
     // 将API_KEY替换成你的API密钥
-    private static final String API_KEY = "sk-proj-Mg57a8TpL6nvzHgfRPeeT3BlbkFJyWgzMEGEDW85zpnl3zg6";
+    private static final String API_KEY = new OpenAiConfig().getApiKey();
     public String chat(List<String> conversationHistory, String model){
         // 准备JSON数据
         String jsonData = String.format("""
@@ -34,7 +35,6 @@ public class Gpt3Util {
                 }""", model, String.join(",", conversationHistory));
         // 创建HttpClient
         HttpClient client = HttpClient.newHttpClient();
-        System.out.println(jsonData);
         // 构建HttpRequest
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URL))

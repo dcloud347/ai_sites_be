@@ -26,7 +26,6 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.List;
 
 /**
@@ -52,7 +51,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             case "gpt3.5" -> model = "gpt-3.5-turbo";
             case "gpt4" -> model = "gpt-4-turbo-preview";
             case "dall3" -> model = "dall-e-3";
-            default -> {return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("不认识的模型" + chatDto.getMode()));}
+            default -> {return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("不认识的模型" + chatDto.getMode()));}
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ArrayList<String> list = new ArrayList<>();
@@ -79,13 +78,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
         // 发送消息
         String chat = gpt3Util.chat(list, model);
-        System.out.println(chat);
         if (chat == null){
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("网络异常"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("网络异常"));
         }
         JSONObject jsonObject = JSON.parseObject(chat);
         if (jsonObject.getJSONObject("error") != null){
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error(jsonObject.getJSONObject("error").get("message").toString()));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error(jsonObject.getJSONObject("error").get("message").toString()));
         }
         JSONArray choices = jsonObject.getJSONArray("choices");
         JSONObject choice = choices.getJSONObject(0);
