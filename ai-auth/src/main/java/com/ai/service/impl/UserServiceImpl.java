@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -90,7 +91,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         map.put("id", user.getId());
         String token = JwtUtil.generateJwtToken(map);
         // 将token存入redis
-        stringRedisTemplate.opsForValue().set(RedisPrefixEnum.USER_TOKEN.getPrefix() + token, user.getId().toString());
+        stringRedisTemplate.opsForValue().set(RedisPrefixEnum.USER_TOKEN.getPrefix() + token, user.getId().toString(),3, TimeUnit.DAYS);
         // 更新上次登录时间
         user.setLastDate(LocalDate.now());
         this.updateById(user);
