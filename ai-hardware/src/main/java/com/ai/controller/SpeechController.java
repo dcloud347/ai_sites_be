@@ -31,7 +31,6 @@ public class SpeechController {
     @PostMapping("speech-to-text")
     @LoginRequired
     public ResponseEntity<Result<SpeechTextVo>> login(@RequestParam("file") MultipartFile file){
-        System.out.println(11111);
         return speechService.transcript(file);
     }
 }
