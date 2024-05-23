@@ -7,14 +7,17 @@ import com.ai.entity.Session;
 import com.ai.model.LoginEntity;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
+import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
 import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.ai.vo.SessionVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -46,7 +49,6 @@ public class MessageController {
     public ResponseEntity<Result<ChatVo>> chat(@RequestBody ChatDto chatDto){
         return messageService.chat(chatDto);
     }
-
     /**
      * 查询我的所有会话记录
      */

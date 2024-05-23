@@ -23,4 +23,5 @@ public interface IMessageService extends IService<Message> {
     ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto);
 
     ResponseEntity<Result<List<ChatRecordVo>>> record(String id);
+
 }
