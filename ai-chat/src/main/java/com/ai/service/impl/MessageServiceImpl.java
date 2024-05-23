@@ -111,4 +111,5 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         messages.forEach(message -> chatRecordVos.add(new ChatRecordVo(message)));
         return ResponseEntity.ok(Result.success(chatRecordVos));
     }
+
 }

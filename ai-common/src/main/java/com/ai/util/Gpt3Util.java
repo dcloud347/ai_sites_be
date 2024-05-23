@@ -1,7 +1,11 @@
 package com.ai.util;
 
 import com.ai.config.OpenAiConfig;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.net.URI;
@@ -9,13 +13,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author 刘晨
@@ -26,6 +25,8 @@ public class Gpt3Util {
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
     // 将API_KEY替换成你的API密钥
     private static final String API_KEY = new OpenAiConfig().getApiKey();
+
+
     public String chat(List<String> conversationHistory, String model){
         // 准备JSON数据
         String jsonData = String.format("""
@@ -57,6 +58,8 @@ public class Gpt3Util {
     public static void main(String[] args) {
         ArrayList<String> list = new ArrayList<>();
         list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", "你是gpt3.5还是gpt4"));
-        new Gpt3Util().chat(list, "gpt-3.5-turbo");
+//        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "assistant", "我是GPT-3，尚未更新至GPT-4版本。如有其他问题，我将竭诚为您提供帮助。"));
+//        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", "那你有新版本了吗"));
+
     }
 }
