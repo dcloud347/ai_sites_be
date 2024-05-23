@@ -29,4 +29,9 @@ spring:
         namespace: ${env}
     compatibility-verifier:
       enabled: false
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 2MB
 
