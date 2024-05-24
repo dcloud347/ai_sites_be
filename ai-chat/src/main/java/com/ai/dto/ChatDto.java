@@ -29,4 +29,5 @@ public class ChatDto {
      */
     private String mode;
 
+    private String fileId;
 }

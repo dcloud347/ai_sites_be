@@ -13,16 +13,21 @@ import com.ai.util.Result;
 import com.ai.util.ResultCode;
 import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
+import com.ai.vo.UploadVo;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -72,6 +77,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             this.list(queryWrapper).forEach(message -> list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), message.getContent())));
         }
         list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", chatDto.getContent()));
+        if (chatDto.getFileId() != null){
+            // 把文件带上去聊天
+            list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s\"}", "system", chatDto.getFileId()));
+        }
         // 使单次对话不会太长
         if (list.size() > 10){
             list.subList(0, list.size() - 10).clear();
@@ -111,5 +120,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         messages.forEach(message -> chatRecordVos.add(new ChatRecordVo(message)));
         return ResponseEntity.ok(Result.success(chatRecordVos));
     }
+
+
+
 
 }

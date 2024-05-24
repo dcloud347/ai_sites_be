@@ -18,7 +18,7 @@ class AiChatApplicationTests {
                 .packageConfig(builder -> builder.parent("com")
                         .moduleName("ai").
                         pathInfo(Collections.singletonMap(OutputFile.xml, "./src/main/resources/mapper"))).
-                strategyConfig(builder -> builder.addInclude("session", "message")
+                strategyConfig(builder -> builder.addInclude("file")
                         .entityBuilder().
                         enableLombok().
                         enableChainModel()

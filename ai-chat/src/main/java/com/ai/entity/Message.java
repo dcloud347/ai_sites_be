@@ -67,11 +67,18 @@ public class Message implements Serializable {
      * 模型
      */
     private String model;
+
+    /**
+     * 文件id
+     */
+    private String fileId;
+
     public Message(ChatDto chatDto){
         content = chatDto.getContent();
         messageType = chatDto.getMessageType();
         sessionId = chatDto.getSessionId();
         createTime = LocalDateTime.now();
+        fileId = chatDto.getFileId();
     }
 
     public Message(ChatVo chatVo){

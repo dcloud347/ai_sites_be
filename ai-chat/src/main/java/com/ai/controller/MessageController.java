@@ -13,13 +13,16 @@ import com.ai.util.ResultCode;
 import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.ai.vo.SessionVo;
+import com.ai.vo.UploadVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,4 +75,6 @@ public class MessageController {
         }
         return messageService.record(id);
     }
+
+
 }
