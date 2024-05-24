@@ -6,6 +6,10 @@ import java.io.Serializable;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.intellij.lang.annotations.Pattern;
+import org.springframework.util.DigestUtils;
+
+import javax.validation.constraints.Email;
 
 /**
  * <p>
@@ -28,6 +32,7 @@ public class Manager implements Serializable {
     /**
      * 邮箱
      */
+    @Email
     private String email;
 
     /**
@@ -44,4 +49,8 @@ public class Manager implements Serializable {
      * 管理员姓名，备注用
      */
     private String name;
+
+    public String getPassword() {
+        return DigestUtils.md5DigestAsHex(password.getBytes());
+    }
 }

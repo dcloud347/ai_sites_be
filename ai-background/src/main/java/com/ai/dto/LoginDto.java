@@ -14,7 +14,7 @@ import org.springframework.util.DigestUtils;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginDto {
-    private String username;
+    private String email;
     private String password;
 
     public String getPassword() {

@@ -68,6 +68,15 @@ public class User implements Serializable {
     private String username;
 
     /**
+     * 昵称
+     */
+    private String nick;
+    /**
+     * 头像
+     */
+    private String avatar;
+
+    /**
      * 账号类型
      */
     private String type;
