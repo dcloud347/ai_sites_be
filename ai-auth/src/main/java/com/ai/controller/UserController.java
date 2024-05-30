@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,8 +38,8 @@ public class UserController {
      * 邮箱-密码登录
      */
     @PostMapping("login")
-    public ResponseEntity<Result<LoginVo>> login(@RequestBody LoginDto loginDto){
-        return userService.login(loginDto);
+    public ResponseEntity<Result<LoginVo>> login(@RequestBody LoginDto loginDto,  HttpServletRequest request){
+        return userService.login(loginDto, request);
     }
 
     /**

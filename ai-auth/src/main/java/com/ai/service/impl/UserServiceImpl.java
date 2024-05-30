@@ -1,15 +1,19 @@
 package com.ai.service.impl;
 
+import com.ai.aspect.LoginAspect;
 import com.ai.dto.LoginDto;
+import com.ai.dto.UserInfoDto;
 import com.ai.entity.User;
 import com.ai.enums.RedisPrefixEnum;
 import com.ai.mapper.UserMapper;
+import com.ai.model.LoginEntity;
 import com.ai.service.IUserService;
 import com.ai.util.CommonUtil;
 import com.ai.util.JwtUtil;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
 import com.ai.vo.LoginVo;
+import com.ai.vo.UserInfoVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -17,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -34,14 +39,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Resource
     private StringRedisTemplate stringRedisTemplate;
     @Override
-    public ResponseEntity<Result<LoginVo>> login(LoginDto loginDto) {
+    public ResponseEntity<Result<LoginVo>> login(LoginDto loginDto, HttpServletRequest request) {
         User user = new User(loginDto);
-        User one = this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
-        User one1 = this.getOne(new QueryWrapper<User>().eq("username", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
-        if (one == null && one1 == null){
+        User one;
+        one = this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
+        if(one == null){
+            one = this.getOne(new QueryWrapper<User>().eq("username", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
+        }
+        if (one == null){
             return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("账号或密码错误"));
         }
-        return ResponseEntity.ok(Result.success(one1 == null ? new LoginVo(genToken(one)) : new LoginVo(genToken(one1))));
+        // 修改上次登录的ip
+        String ip = CommonUtil.getIpAddr(request);
+        one.setLastIp(ip);
+        this.updateById(one);
+        return ResponseEntity.ok(Result.success(new LoginVo(genToken(one))));
     }
 
     @Override
@@ -81,6 +93,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         User user = new User(loginDto).setType("音箱");
         this.save(user);
         return ResponseEntity.ok(Result.success(loginDto));
+    }
+
+    @Override
+    public Result updateUserInfo(UserInfoDto userInfoDto) {
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        User user = this.getById(loginEntity.getUserId());
+        user.setNick(userInfoDto.getNick());
+        user.setAvatar(userInfoDto.getAvatar());
+        this.updateById(user);
+        return Result.success();
+    }
+
+    @Override
+    public Result<UserInfoVo> userInfo() {
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        User user = this.getById(loginEntity.getUserId());
+        return Result.success(new UserInfoVo(user));
     }
 
     /**

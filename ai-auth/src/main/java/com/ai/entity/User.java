@@ -55,6 +55,10 @@ public class User implements Serializable {
      */
     private Integer point;
 
+    /**
+     * 上次登录的ip地址
+     */
+    private String lastIp;
     public LocalDate getCreateDate() {
         if (createDate == null){
             createDate = LocalDate.now();
