@@ -84,6 +84,11 @@ public class User implements Serializable {
      * 账号类型
      */
     private String type;
+
+    /**
+     * 音箱编号
+     */
+    private String code;
     public User (LoginDto loginDto){
         email = loginDto.getEmail();
         username = loginDto.getUsername();

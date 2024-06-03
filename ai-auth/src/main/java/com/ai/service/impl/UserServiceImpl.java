@@ -14,7 +14,9 @@ import com.ai.util.Result;
 import com.ai.util.ResultCode;
 import com.ai.vo.LoginVo;
 import com.ai.vo.UserInfoVo;
+import com.ai.vo.UserVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,6 +42,9 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private UserMapper userMapper;
     @Override
     public ResponseEntity<Result<LoginVo>> login(LoginDto loginDto, HttpServletRequest request) {
         User user = new User(loginDto);
@@ -110,6 +117,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         User user = this.getById(loginEntity.getUserId());
         return Result.success(new UserInfoVo(user));
+    }
+
+    @Override
+    public Result<List<UserVo>> userList(Page<User> page, QueryWrapper<User> userVoQueryWrapper) {
+        Page<User> userPage = this.page(page, userVoQueryWrapper);
+        List<User> records = userPage.getRecords();
+        List<UserVo> list = new ArrayList<>();
+        records.forEach(user -> list.add(new UserVo(user)));
+        return Result.success(list);
     }
 
     /**

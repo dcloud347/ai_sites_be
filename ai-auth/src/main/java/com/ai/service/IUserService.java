@@ -6,10 +6,14 @@ import com.ai.entity.User;
 import com.ai.util.Result;
 import com.ai.vo.LoginVo;
 import com.ai.vo.UserInfoVo;
+import com.ai.vo.UserVo;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.http.ResponseEntity;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * <p>
@@ -32,4 +36,6 @@ public interface IUserService extends IService<User> {
     Result updateUserInfo(UserInfoDto userInfoDto);
 
     Result<UserInfoVo> userInfo();
+
+    Result<List<UserVo>> userList(Page<User> page, QueryWrapper<User> userVoQueryWrapper);
 }
