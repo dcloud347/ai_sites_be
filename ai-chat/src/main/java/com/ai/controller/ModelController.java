@@ -19,6 +19,7 @@ public class ModelController {
         ArrayList<String> list = new ArrayList<>();
         list.add("gpt3.5");
         list.add("gpt4");
+        list.add("gpt-4o");
         list.add("dall3");
         return Result.success(list);
     }
