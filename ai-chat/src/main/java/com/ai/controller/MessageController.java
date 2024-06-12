@@ -25,6 +25,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -64,6 +65,9 @@ public class MessageController {
         return Result.success(sessionVos);
     }
 
+    /**
+     * 查询具体的聊天记录
+     */
     @GetMapping("{id}")
     @LoginRequired
     public ResponseEntity<Result<List<ChatRecordVo>>> record(@PathVariable String id){
@@ -76,5 +80,12 @@ public class MessageController {
         return messageService.record(id);
     }
 
-
+    /**
+     * 音箱用，查询最近一段时间是否有会话
+     */
+    @GetMapping("speaker")
+    @LoginRequired
+    public Result getSession(){
+        return sessionService.getSession();
+    }
 }

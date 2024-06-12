@@ -5,10 +5,7 @@ import com.ai.feign.UserService;
 import com.ai.util.ExcelUtil;
 import com.ai.util.Result;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -35,7 +32,6 @@ public class UserController {
         Result<List<HashMap<String, String>>> result = userService.userList(current, size);
         ArrayList<List<String>> arrayLists = new ArrayList<>();
         List<HashMap<String, String>> data = result.getData();
-        System.out.println(data);
         for (HashMap<String, String> map: data){
             ArrayList<String> list = new ArrayList<>();
             // 这个顺序要和下面的表格头顺序一致
@@ -46,5 +42,11 @@ public class UserController {
             arrayLists.add(list);
         }
         return ExcelUtil.genExcel(new String[]{"昵称", "邮箱", "密码", "音箱设备"}, arrayLists);
+    }
+
+    @GetMapping("{id}")
+    @RoleRequired({RoleRequired.RoleEnum.admin, RoleRequired.RoleEnum.superAdmin})
+    public ResponseEntity<Result> getData(@PathVariable String id){
+        return userService.userData(id);
     }
 }

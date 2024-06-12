@@ -13,7 +13,7 @@ public class ChatDto {
      * 会话id
      */
     private Long sessionId;
-
+    private String type;
     /**
      * 消息类型
      */

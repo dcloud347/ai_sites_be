@@ -1,9 +1,11 @@
 package com.ai.service.impl;
 
 import com.ai.aspect.LoginAspect;
+import com.ai.config.SpeakerConfig;
 import com.ai.dto.ChatDto;
 import com.ai.entity.Message;
 import com.ai.entity.Session;
+import com.ai.enums.RedisPrefixEnum;
 import com.ai.mapper.MessageMapper;
 import com.ai.model.LoginEntity;
 import com.ai.service.IMessageService;
@@ -22,6 +24,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +35,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -46,7 +50,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     @Resource
     private ISessionService sessionService;
-
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
     @Resource
     private Gpt3Util gpt3Util;
     @Override
@@ -65,6 +70,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             // 新建对话
             Session session = new Session();
             session.setTitle(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).setStartTime(LocalDateTime.now()).setUserId(loginEntity.getUserId());
+            session.setType(chatDto.getType());
             sessionService.save(session);
             chatDto.setSessionId(session.getId());
         }else {
@@ -111,6 +117,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         message1.setModel(model);
         message1.setUserId(loginEntity.getUserId()).setRole(role);
         this.save(message1);
+        if("speaker".equals(chatDto.getType())){
+            // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
+            String key = RedisPrefixEnum.SPEAKER_SESSION.getPrefix() + loginEntity.getUserId();
+            redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
+        }
         return ResponseEntity.ok(Result.success(chatVo));
     }
 
@@ -121,8 +132,5 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         messages.forEach(message -> chatRecordVos.add(new ChatRecordVo(message)));
         return ResponseEntity.ok(Result.success(chatRecordVos));
     }
-
-
-
 
 }

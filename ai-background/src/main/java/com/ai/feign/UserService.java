@@ -3,11 +3,9 @@ package com.ai.feign;
 
 import com.ai.util.Result;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,4 +21,10 @@ public interface UserService {
      */
     @GetMapping("/api/userinfo/list")
     Result userList(@RequestParam Integer current,@RequestParam Integer size);
+
+    /**
+     * 管理员获取通过user_id获取用户的信息
+     */
+    @GetMapping("/api/userinfo/{id}")
+    ResponseEntity<Result> userData(@PathVariable String id);
 }

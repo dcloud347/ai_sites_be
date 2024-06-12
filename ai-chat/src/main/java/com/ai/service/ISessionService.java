@@ -1,6 +1,7 @@
 package com.ai.service;
 
 import com.ai.entity.Session;
+import com.ai.util.Result;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -13,4 +14,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface ISessionService extends IService<Session> {
 
+    Result getSession();
 }

@@ -6,12 +6,14 @@ import com.ai.entity.User;
 import com.ai.feign.EmailService;
 import com.ai.service.IUserService;
 import com.ai.util.Result;
+import com.ai.util.ResultCode;
 import com.ai.vo.UserInfoVo;
 import com.ai.vo.UserVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -52,5 +54,17 @@ public class UserInfoController {
         Page<User> page = new Page<>(current, size);
         page.addOrder(OrderItem.desc("id"));
         return userService.userList(page, new QueryWrapper<User>());
+    }
+
+    /**
+     * 管理员获取通过user_id获取用户的信息
+     */
+    @GetMapping("{id}")
+    public ResponseEntity<Result<User>> userData(@PathVariable String id){
+        User user = userService.getById(id);
+        if (user == null){
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("id为"+id +"的用户不存在"));
+        }
+        return ResponseEntity.ok(Result.success(user));
     }
 }

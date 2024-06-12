@@ -37,4 +37,5 @@ public class Session implements Serializable {
      * 会话开始时间
      */
     private LocalDateTime startTime;
+    private String type;
 }
