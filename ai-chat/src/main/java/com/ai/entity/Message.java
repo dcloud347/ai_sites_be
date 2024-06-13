@@ -87,4 +87,10 @@ public class Message implements Serializable {
         sessionId = chatVo.getSessionId();
         createTime = LocalDateTime.now();
     }
+    public Message(String content,long sessionId){
+        this.content = content;
+        this.messageType = "text";
+        this.sessionId = sessionId;
+        this.createTime = LocalDateTime.now();
+    }
 }

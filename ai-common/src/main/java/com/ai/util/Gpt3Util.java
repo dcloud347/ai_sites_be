@@ -57,7 +57,6 @@ public class Gpt3Util {
         try {
             // 发送请求并获取响应
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            System.out.println(response);
             return response.body();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();

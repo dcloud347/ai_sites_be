@@ -54,6 +54,13 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private RedisTemplate<String, Object> redisTemplate;
     @Resource
     private Gpt3Util gpt3Util;
+
+    public static String cleanText(String text) {
+        // 去除多余的换行符、制表符，并替换为单个空格
+        return text.replaceAll("\\s+", " ").trim();
+    }
+
+
     @Override
     public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto) {
         String model;
@@ -113,7 +120,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         // 保存gpt的回复
         ChatVo chatVo = new ChatVo();
         chatVo.setMessage(content).setSessionId(chatDto.getSessionId());
-        Message message1 = new Message(chatVo);
+        System.out.println(content.strip());
+        Message message1 = new Message(cleanText(content.strip()),chatVo.getSessionId());
         message1.setModel(model);
         message1.setUserId(loginEntity.getUserId()).setRole(role);
         this.save(message1);
