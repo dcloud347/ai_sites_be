@@ -90,6 +90,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             // 查询出之前的聊天记录，并发回给chatgpt
             this.list(queryWrapper).forEach(message -> list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), message.getContent())));
         }
+        if("speaker".equals(chatDto.getType())){
+            list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "请以对话的方式简短回答问题。"));
+        }
         list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", chatDto.getContent()));
         if (chatDto.getFileId() != null){
             // 把文件带上去聊天
