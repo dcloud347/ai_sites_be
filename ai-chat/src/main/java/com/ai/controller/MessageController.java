@@ -15,6 +15,7 @@ import com.ai.vo.ChatVo;
 import com.ai.vo.SessionVo;
 import com.ai.vo.UploadVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.apache.poi.ss.formula.functions.Today;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,12 @@ import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -58,11 +63,33 @@ public class MessageController {
      */
     @GetMapping
     @LoginRequired
-    public Result<List<SessionVo>> list(){
+    public Result<Map> list(){
+        LocalDateTime now = LocalDateTime.now();
+        List<SessionVo> today = new ArrayList<>();
+        List<SessionVo> yesterday = new ArrayList<>();
+        List<SessionVo> last7Days = new ArrayList<>();
+        List<SessionVo> last30Days = new ArrayList<>();
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ArrayList<SessionVo> sessionVos = new ArrayList<>();
         sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).orderByDesc("id")).forEach(session -> sessionVos.add(new SessionVo(session)));
-        return Result.success(sessionVos);
+        for (SessionVo vo : sessionVos) {
+            LocalDate sessionDate = vo.getStartTime().toLocalDate();
+            if (sessionDate.equals(now.toLocalDate())) {
+                today.add(vo);
+            } else if (sessionDate.equals(now.minusDays(1).toLocalDate())) {
+                yesterday.add(vo);
+            } else if (sessionDate.isAfter(now.minusDays(7).toLocalDate())) {
+                last7Days.add(vo);
+            } else if (sessionDate.isAfter(now.minusDays(30).toLocalDate())) {
+                last30Days.add(vo);
+            }
+        }
+        HashMap<String, List> map = new HashMap<>();
+        map.put("today", today);
+        map.put("yesterday", yesterday);
+        map.put("last7Days", last7Days);
+        map.put("last30Days", last30Days);
+        return Result.success(map);
     }
 
     /**

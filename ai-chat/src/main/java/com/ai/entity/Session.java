@@ -2,7 +2,10 @@ package com.ai.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
@@ -17,6 +20,8 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Session implements Serializable {
 
     private static final long serialVersionUID = 1L;

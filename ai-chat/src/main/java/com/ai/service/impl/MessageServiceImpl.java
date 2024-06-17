@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -88,7 +89,13 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     // 按创建时间升序排序
                     .orderByAsc("create_time");
             // 查询出之前的聊天记录，并发回给chatgpt
-            this.list(queryWrapper).forEach(message -> list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), message.getContent())));
+            this.list(queryWrapper).forEach(message -> {
+                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), message.getContent()));
+                if (message.getFileId() != null){
+                    // 把文件带上去聊天
+                    list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,这是多个文件的ID，使用英文逗号进行分割\"}", "system", message.getFileId()));
+                }
+            });
         }
         if("speaker".equals(chatDto.getType())){
             list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "请以对话的方式简短回答问题。"));
@@ -96,7 +103,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", chatDto.getContent()));
         if (chatDto.getFileId() != null){
             // 把文件带上去聊天
-            list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s\"}", "system", chatDto.getFileId()));
+            list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,这是多个文件的ID，使用英文逗号进行分割\"}", "system", chatDto.getFileId()));
         }
         // 使单次对话不会太长
         if (list.size() > 10){

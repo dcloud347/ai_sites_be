@@ -2,6 +2,8 @@ package com.ai.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author 刘晨
  */
@@ -29,5 +31,5 @@ public class ChatDto {
      */
     private String mode;
 
-    private String fileId;
+    private List<String> fileId;
 }

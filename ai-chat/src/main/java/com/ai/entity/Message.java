@@ -78,7 +78,7 @@ public class Message implements Serializable {
         messageType = chatDto.getMessageType();
         sessionId = chatDto.getSessionId();
         createTime = LocalDateTime.now();
-        fileId = chatDto.getFileId();
+        fileId = String.join(",", chatDto.getFileId());
     }
 
     public Message(ChatVo chatVo){
