@@ -86,6 +86,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             session.setType(chatDto.getType());
             sessionService.save(session);
             chatDto.setSessionId(session.getId());
+            if("speaker".equals(chatDto.getType())){
+                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "请以对话的方式简短回答问题。"));
+            }
         }else {
             QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
             // 指定只查询content和role字段
@@ -101,9 +104,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,这是多个文件的ID，使用英文逗号进行分割\"}", "system", message.getFileId()));
                 }
             });
-        }
-        if("speaker".equals(chatDto.getType())){
-            list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "请以对话的方式简短回答问题。"));
         }
         list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", chatDto.getContent()));
         if (chatDto.getFileId() != null){
@@ -133,7 +133,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         message.setRole("user").setUserId(loginEntity.getUserId());
         this.save(message);
         // 如果有图片信息，保存文件的聊天记录
-        if(!chatDto.getFileId().isEmpty()){
+        if(chatDto.getFileId()!=null){
             List<String> stringList = chatDto.getFileId();
             stringList.forEach(s -> {
                 // 获取文件信息
