@@ -20,4 +20,5 @@ public class UploadVo {
     private long created_at;
     private String status;
     private String status_details;
+    private String url;
 }

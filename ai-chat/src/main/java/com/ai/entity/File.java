@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import com.ai.vo.UploadVo;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
@@ -21,6 +23,8 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(chain = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class File implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -57,6 +61,8 @@ public class File implements Serializable {
      */
     private String statusDetails;
 
+    private String url;
+
     public File(UploadVo uploadVo){
         id = uploadVo.getId();
         purpose = uploadVo.getPurpose();
@@ -68,5 +74,6 @@ public class File implements Serializable {
         createdAt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
         status = uploadVo.getStatus();
         statusDetails = uploadVo.getStatus_details();
+        url = uploadVo.getUrl();
     }
 }

@@ -19,8 +19,14 @@ public class ChatRecordVo {
      */
     private String role;
 
+    private String model;
+    private String url;
+    private String messageType;
     public ChatRecordVo(Message msg){
         message = msg.getContent();
         role = msg.getRole();
+        model = msg.getModel();
+        url = msg.getFileUrl();
+        messageType = msg.getMessageType();
     }
 }

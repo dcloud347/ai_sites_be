@@ -3,11 +3,13 @@ package com.ai.service.impl;
 import com.ai.aspect.LoginAspect;
 import com.ai.config.SpeakerConfig;
 import com.ai.dto.ChatDto;
+import com.ai.entity.File;
 import com.ai.entity.Message;
 import com.ai.entity.Session;
 import com.ai.enums.RedisPrefixEnum;
 import com.ai.mapper.MessageMapper;
 import com.ai.model.LoginEntity;
+import com.ai.service.IFileService;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
 import com.ai.util.Gpt3Util;
@@ -55,6 +57,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private RedisTemplate<String, Object> redisTemplate;
     @Resource
     private Gpt3Util gpt3Util;
+
+    @Resource
+    private IFileService fileService;
 
     public static String cleanText(String text) {
         // 去除多余的换行符、制表符，并替换为单个空格
@@ -106,8 +111,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,这是多个文件的ID，使用英文逗号进行分割\"}", "system", chatDto.getFileId()));
         }
         // 使单次对话不会太长
-        if (list.size() > 10){
-            list.subList(0, list.size() - 10).clear();
+        if (list.size() > 20){
+            list.subList(0, list.size() - 20).clear();
         }
         // 发送消息
         String chat = gpt3Util.chat(list, model);
@@ -127,6 +132,21 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         Message message = new Message(chatDto);
         message.setRole("user").setUserId(loginEntity.getUserId());
         this.save(message);
+        // 如果有图片信息，保存文件的聊天记录
+        if(!chatDto.getFileId().isEmpty()){
+            List<String> stringList = chatDto.getFileId();
+            stringList.forEach(s -> {
+                // 获取文件信息
+                System.out.println(s);
+                File file = fileService.getOne(new QueryWrapper<File>().eq("id", s));
+                Message fileMessage = new Message(file);
+                fileMessage.setRole("user");
+                fileMessage.setUserId(loginEntity.getUserId());
+                fileMessage.setSessionId(chatDto.getSessionId());
+                System.out.println(fileMessage);
+                this.save(fileMessage);
+            });
+        }
         // 保存gpt的回复
         ChatVo chatVo = new ChatVo();
         chatVo.setMessage(content).setSessionId(chatDto.getSessionId());

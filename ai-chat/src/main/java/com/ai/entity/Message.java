@@ -73,6 +73,7 @@ public class Message implements Serializable {
      */
     private String fileId;
 
+    private String fileUrl;
     public Message(ChatDto chatDto){
         content = chatDto.getContent();
         messageType = chatDto.getMessageType();
@@ -92,5 +93,12 @@ public class Message implements Serializable {
         this.messageType = "text";
         this.sessionId = sessionId;
         this.createTime = LocalDateTime.now();
+    }
+
+    public Message(File file){
+        this.content = file.getFilename();
+        this.messageType = "file";
+        createTime = LocalDateTime.now();
+        fileUrl = file.getUrl();
     }
 }
