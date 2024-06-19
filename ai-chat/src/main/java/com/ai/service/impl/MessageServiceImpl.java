@@ -26,6 +26,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -66,6 +67,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return text.replaceAll("\\s+", " ").trim();
     }
 
+    private String clear(String text){
+        return StringEscapeUtils.escapeJson(text);
+    }
 
     @Override
     public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto) {
@@ -98,7 +102,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     .orderByAsc("create_time");
             // 查询出之前的聊天记录，并发回给chatgpt
             this.list(queryWrapper).forEach(message -> {
-                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), message.getContent()));
+                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), clear(message.getContent())));
                 if (message.getFileId() != null){
                     // 把文件带上去聊天
                     list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,这是多个文件的ID，使用英文逗号进行分割\"}", "system", message.getFileId()));
@@ -151,7 +155,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         ChatVo chatVo = new ChatVo();
         chatVo.setMessage(content).setSessionId(chatDto.getSessionId());
         System.out.println(content.strip());
-        Message message1 = new Message(cleanText(content.strip()),chatVo.getSessionId());
+        Message message1 = new Message(content.strip(), chatVo.getSessionId());
         message1.setModel(model);
         message1.setUserId(loginEntity.getUserId()).setRole(role);
         this.save(message1);
