@@ -26,7 +26,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -67,9 +66,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return text.replaceAll("\\s+", " ").trim();
     }
 
-    private String clear(String text){
-        return StringEscapeUtils.escapeJson(text);
-    }
 
     @Override
     public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto) {
@@ -90,6 +86,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             session.setType(chatDto.getType());
             sessionService.save(session);
             chatDto.setSessionId(session.getId());
+            if("speaker".equals(chatDto.getType())){
+                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "请以对话的方式简短回答问题。"));
+            }
         }else {
             QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
             // 指定只查询content和role字段
@@ -99,15 +98,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     .orderByAsc("create_time");
             // 查询出之前的聊天记录，并发回给chatgpt
             this.list(queryWrapper).forEach(message -> {
-                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), clear(message.getContent())));
+                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), message.getContent()));
                 if (message.getFileId() != null){
                     // 把文件带上去聊天
                     list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,这是多个文件的ID，使用英文逗号进行分割\"}", "system", message.getFileId()));
                 }
             });
-        }
-        if("speaker".equals(chatDto.getType())){
-            list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "请以对话的方式简短回答问题。"));
         }
         list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", chatDto.getContent()));
         if (chatDto.getFileId() != null){
@@ -137,10 +133,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         message.setRole("user").setUserId(loginEntity.getUserId());
         this.save(message);
         // 如果有图片信息，保存文件的聊天记录
-        if(chatDto.getFileId() != null){
+        if(chatDto.getFileId()!=null){
             List<String> stringList = chatDto.getFileId();
             stringList.forEach(s -> {
                 // 获取文件信息
+                System.out.println(s);
                 File file = fileService.getOne(new QueryWrapper<File>().eq("id", s));
                 Message fileMessage = new Message(file);
                 fileMessage.setRole("user");
@@ -154,7 +151,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         ChatVo chatVo = new ChatVo();
         chatVo.setMessage(content).setSessionId(chatDto.getSessionId());
         System.out.println(content.strip());
-        Message message1 = new Message(content.strip(),chatVo.getSessionId());
+        Message message1 = new Message(cleanText(content.strip()),chatVo.getSessionId());
         message1.setModel(model);
         message1.setUserId(loginEntity.getUserId()).setRole(role);
         this.save(message1);
@@ -163,10 +160,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             String key = RedisPrefixEnum.SPEAKER_SESSION.getPrefix() + loginEntity.getUserId();
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
         }
-        // 更新session的时间
-        Session session = sessionService.getById(message.getSessionId());
-        session.setStartTime(LocalDateTime.now());
-        sessionService.updateById(session);
         return ResponseEntity.ok(Result.success(chatVo));
     }
 
