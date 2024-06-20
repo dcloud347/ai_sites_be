@@ -153,7 +153,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
         // 保存gpt的回复
         ChatVo chatVo = new ChatVo();
-        chatVo.setMessage(content).setSessionId(chatDto.getSessionId());
+        chatVo.setMessage(content).setSessionId(chatDto.getSessionId()).setModel(chatDto.getMode());
         System.out.println(content.strip());
         Message message1 = new Message(content.strip(), chatVo.getSessionId());
         message1.setModel(model);

@@ -17,4 +17,6 @@ public class ChatVo {
     private String message;
 
     private Long sessionId;
+
+    private String model;
 }
