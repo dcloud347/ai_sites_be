@@ -62,11 +62,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Resource
     private IFileService fileService;
 
-    public static String cleanText(String text) {
-        // 去除多余的换行符、制表符，并替换为单个空格
-        return text.replaceAll("\\s+", " ").trim();
-    }
-
     private String clear(String text){
         return StringEscapeUtils.escapeJson(text);
     }
