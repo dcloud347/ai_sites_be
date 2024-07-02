@@ -94,7 +94,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         switch (chatDto.getMode()){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
             case "gpt4" -> model = "gpt-4-turbo-preview";
-            case "dall3" -> model = "dall-e-3";
             case "gpt-4o" -> model = "gpt-4o";
             default -> {return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("不认识的模型" + chatDto.getMode()));}
         }
