@@ -40,6 +40,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -62,15 +64,30 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Resource
     private IFileService fileService;
 
-    public static String cleanText(String text) {
-        // 去除多余的换行符、制表符，并替换为单个空格
-        return text.replaceAll("\\s+", " ").trim();
+    // 判断标题是否修改重新总结
+    private boolean isPastTitle(String title) {
+        String regex = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(title);
+        return matcher.matches();
     }
 
     private String clear(String text){
         return StringEscapeUtils.escapeJson(text);
     }
 
+    // 解析gpt的回复
+    private JSONObject analysis(String text){
+        JSONObject jsonObject = JSON.parseObject(text);
+        if (jsonObject.getJSONObject("error") != null){
+            System.out.println("gpt出错");
+            System.out.println(jsonObject.getJSONObject("error").get("message").toString());
+            return null;
+        }
+        JSONArray choices = jsonObject.getJSONArray("choices");
+        JSONObject choice = choices.getJSONObject(0);
+        return choice.getJSONObject("message");
+    }
     @Override
     public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto) {
         String model;
@@ -123,13 +140,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         if (chat == null){
             return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("网络异常"));
         }
-        JSONObject jsonObject = JSON.parseObject(chat);
-        if (jsonObject.getJSONObject("error") != null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error(jsonObject.getJSONObject("error").get("message").toString()));
+        JSONObject msg = analysis(chat);
+        if (msg == null){
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("gpt error"));
         }
-        JSONArray choices = jsonObject.getJSONArray("choices");
-        JSONObject choice = choices.getJSONObject(0);
-        JSONObject msg = choice.getJSONObject("message");
         String role = msg.getString("role");
         String content = msg.getString("content");
         // 保存聊天记录
@@ -158,12 +172,30 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         Message message1 = new Message(content.strip(), chatVo.getSessionId());
         message1.setModel(model);
         message1.setUserId(loginEntity.getUserId()).setRole(role);
+        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message1.getRole(), clear(message1.getContent())));
         this.save(message1);
         if("speaker".equals(chatDto.getType())){
             // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
             String key = RedisPrefixEnum.SPEAKER_SESSION.getPrefix() + loginEntity.getUserId();
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
         }
+        // 更新对话时间
+        Session session = sessionService.getById(message1.getSessionId());
+        session.setStartTime(LocalDateTime.now());
+        // 总结标题
+        if (isPastTitle(session.getTitle())){
+            list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", "根据之前和我的聊天的内容，给我总结一个合适的标题，我只要标题，其他的文字，符号都不要，20字内"));
+            // 开始总结
+            String title = gpt3Util.chat(list, model);
+            JSONObject msg1 = analysis(title);
+            if (msg1 == null){
+                return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("gpt error"));
+            }
+            String content1 = msg1.getString("content");
+            System.out.println(content1);
+            session.setTitle(content1);
+        }
+        sessionService.updateById(session);
         return ResponseEntity.ok(Result.success(chatVo));
     }
 
