@@ -34,7 +34,7 @@ public class EmailController {
         mimeMessage.setFrom(sender);
         mimeMessage.setTo(email);
 
-        mimeMessage.setSubject("注册验证码");
+        mimeMessage.setSubject("Registration Verification Code");
         mimeMessage.setText(code);
         mailSender.send(mimeMessage);
     }

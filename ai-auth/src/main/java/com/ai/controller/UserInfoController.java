@@ -63,7 +63,7 @@ public class UserInfoController {
     public ResponseEntity<Result<User>> userData(@PathVariable String id){
         User user = userService.getById(id);
         if (user == null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("id为"+id +"的用户不存在"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("The user with id:"+ id +"does not exist."));
         }
         return ResponseEntity.ok(Result.success(user));
     }

@@ -54,7 +54,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             one = this.getOne(new QueryWrapper<User>().eq("username", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
         }
         if (one == null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("账号或密码错误"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Username or password incorrect."));
         }
         // 修改上次登录的ip
         String ip = CommonUtil.getIpAddr(request);
@@ -68,11 +68,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String code = stringRedisTemplate.opsForValue().get(loginDto.getEmail());
         // 检查验证码
         if (!loginDto.getCode().equals(code)){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("验证码错误"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("verification code incorrect"));
         }
         // 查询该邮箱是否已经注册
         if (this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmail())) != null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("邮箱已注册"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("The email has been registered."));
         }
         User user = new User(loginDto);
         this.save(user);
@@ -83,7 +83,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public  ResponseEntity<Result<LoginVo>> registerByUsername(LoginDto loginDto) {
         // 查询该用户名是否已经注册
         if (this.getOne(new QueryWrapper<User>().eq("username", loginDto.getUsername())) != null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("用户名已存在"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("The username already exist."));
         }
         User user = new User(loginDto);
         this.save(user);

@@ -95,7 +95,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             case "gpt3.5" -> model = "gpt-3.5-turbo";
             case "gpt4" -> model = "gpt-4-turbo-preview";
             case "gpt-4o" -> model = "gpt-4o";
-            default -> {return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("不认识的模型" + chatDto.getMode()));}
+            default -> {return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Unrecognised models" + chatDto.getMode()));}
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ArrayList<String> list = new ArrayList<>();
@@ -107,7 +107,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             sessionService.save(session);
             chatDto.setSessionId(session.getId());
             if("speaker".equals(chatDto.getType())){
-                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "请以对话的方式简短回答问题。"));
+                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "Please reply in a short response"));
             }
         }else {
             QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
@@ -121,14 +121,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                 list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), clear(message.getContent())));
                 if (message.getFileId() != null){
                     // 把文件带上去聊天
-                    list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,这是多个文件的ID，使用英文逗号进行分割\"}", "system", message.getFileId()));
+                    list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,this is the ID of multiple files, separated by English commas\"}", "system", message.getFileId()));
                 }
             });
         }
         list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", chatDto.getContent()));
         if (chatDto.getFileId() != null){
             // 把文件带上去聊天
-            list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,这是多个文件的ID，使用英文逗号进行分割\"}", "system", chatDto.getFileId()));
+            list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,this is the ID of multiple files, separated by English commas\"}", "system", chatDto.getFileId()));
         }
         // 使单次对话不会太长
         if (list.size() > 20){
@@ -137,7 +137,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         // 发送消息
         String chat = gpt3Util.chat(list, model);
         if (chat == null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("网络异常"));
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Network Error"));
         }
         JSONObject msg = analysis(chat);
         if (msg == null){
@@ -183,7 +183,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         session.setStartTime(LocalDateTime.now());
         // 总结标题
         if (isPastTitle(session.getTitle())){
-            list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", "根据之前和我的聊天的内容，给我总结一个合适的标题，我只要标题，其他的文字，符号都不要，20字内"));
+            list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user",
+                    "According to the content of the previous chat with me, give me a summary of a suitable title," +
+                            " I just want the title, other words, symbols do not want, within 20 words"));
             // 开始总结
             String title = gpt3Util.chat(list, model);
             JSONObject msg1 = analysis(title);

@@ -42,7 +42,7 @@ public class SpeechServiceImpl extends ServiceImpl<SpeechMapper, Speech> impleme
         try {
             audioData = file.getBytes();
         }catch (IOException e) {
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("无法获取音频内容"));
+            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("Unable to access audio content"));
         }
         String result = speechUtils.speechToText(audioData,model,fileExtension);
         try {

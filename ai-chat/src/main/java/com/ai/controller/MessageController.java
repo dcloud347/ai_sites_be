@@ -102,7 +102,7 @@ public class MessageController {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         Session session = sessionService.getById(id);
         if (session == null || session.getUserId() != loginEntity.getUserId()){
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("无权查询"));
+            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("No access to the resources"));
         }
         return messageService.record(id);
     }

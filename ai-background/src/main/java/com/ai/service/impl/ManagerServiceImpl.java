@@ -33,7 +33,7 @@ public class ManagerServiceImpl extends ServiceImpl<ManagerMapper, Manager> impl
     public Result<LoginVo> login(LoginDto loginDto) {
         Manager one = this.getOne(new QueryWrapper<Manager>().eq("email", loginDto.getEmail()).eq("password", loginDto.getPassword()));
         if (one == null){
-            return Result.error("用户名或密码错误");
+            return Result.error("Username or password incorrect.");
         }
         LoginVo loginVo = new LoginVo().setToken(genToken(one)).setRole(one.getRole());
         return Result.success(loginVo);
@@ -43,7 +43,7 @@ public class ManagerServiceImpl extends ServiceImpl<ManagerMapper, Manager> impl
     public Result create(Manager manager) {
         // 检查是否已有该用户名
         if (this.getOne(new QueryWrapper<Manager>().eq("email", manager.getEmail())) != null){
-            return Result.error("该邮箱已存在");
+            return Result.error("The email has been registered.");
         }
         this.save(manager);
         return Result.success();

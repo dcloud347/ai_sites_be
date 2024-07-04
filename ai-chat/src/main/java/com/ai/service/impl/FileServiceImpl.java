@@ -34,7 +34,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
     @Override
     public ResponseEntity<Result<UploadVo>> uploadFile(MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(Result.error("文件不能为空"));
+            return ResponseEntity.badRequest().body(Result.error("The file can not be empty."));
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         try {
