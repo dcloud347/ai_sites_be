@@ -94,4 +94,10 @@ public class User implements Serializable {
         username = loginDto.getUsername();
         password = DigestUtils.md5DigestAsHex(loginDto.getPassword().getBytes());
     }
+
+    public User(String username, String password, String email){
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
 }

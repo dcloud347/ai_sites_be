@@ -38,4 +38,6 @@ public interface IUserService extends IService<User> {
     Result<UserInfoVo> userInfo();
 
     Result<List<UserVo>> userList(Page<User> page, QueryWrapper<User> userVoQueryWrapper);
+
+    ResponseEntity<Result<LoginVo>> googleLogin(String token, HttpServletRequest request);
 }

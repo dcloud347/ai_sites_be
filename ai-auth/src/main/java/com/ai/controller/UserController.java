@@ -71,6 +71,13 @@ public class UserController {
     }
 
     /**
+     * google 登录/注册
+     */
+    @PostMapping(value = "/googleLogin")
+    public ResponseEntity<Result<LoginVo>> googleLogin(@RequestBody String token, HttpServletRequest request){
+        return userService.googleLogin(token, request);
+    }
+    /**
      * 生成账号密码 （供音箱使用）
      */
     @PostMapping("generate")

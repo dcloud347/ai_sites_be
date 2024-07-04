@@ -29,7 +29,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+import com.ai.util.GoogleUtil;
+import com.ai.util.UserCredentialsGenerator;
 /**
  * <p>
  * 用户表 服务实现类
@@ -141,5 +142,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setLastDate(LocalDate.now());
         this.updateById(user);
         return token;
+    }
+
+    public ResponseEntity<Result<LoginVo>> googleLogin(String token, HttpServletRequest request){
+        String email = GoogleUtil.get_email(token);
+        if(email==null){
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Authentication Failed."));
+        }
+        User one = this.getOne(new QueryWrapper<User>().eq("email", email));
+        if(one==null){
+            String username = "user_"+UserCredentialsGenerator.generateUsername(8);
+            String password = UserCredentialsGenerator.generatePassword(12);
+            one = new User(username,password,email);
+            this.save(one);
+        }
+        String ip = CommonUtil.getIpAddr(request);
+        one.setLastIp(ip);
+        this.updateById(one);
+        return ResponseEntity.ok(Result.success(new LoginVo(genToken(one))));
     }
 }
