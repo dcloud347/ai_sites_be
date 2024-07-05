@@ -12,6 +12,7 @@ import com.ai.model.LoginEntity;
 import com.ai.service.IFileService;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
+import com.ai.util.CommonUtil;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
@@ -31,8 +32,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -89,7 +92,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return choice.getJSONObject("message");
     }
     @Override
-    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto) {
+    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) {
         String model;
         switch (chatDto.getMode()){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
@@ -179,8 +182,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
         }
         // 更新对话时间
+        String ip = CommonUtil.getIpAddr(request);
         Session session = sessionService.getById(message1.getSessionId());
-        session.setStartTime(LocalDateTime.now());
+        Mono<LocalDateTime> dateTime = this.sessionService.getTimeZone(ip);
+        LocalDateTime localDateTime = dateTime.block();
+        session.setStartTime(localDateTime);
         // 总结标题
         if (isPastTitle(session.getTitle())){
             list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user",

@@ -33,7 +33,7 @@ public class CommonController {
         return ipApiService.getTimeZone(ip)
                 .map(timeZone -> {
                     ZonedDateTime now = ZonedDateTime.now(java.time.ZoneId.of(timeZone));
-                    return now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z"));
+                    return now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 })
                 .onErrorReturn("Error retrieving time for IP: " + ip);
     }

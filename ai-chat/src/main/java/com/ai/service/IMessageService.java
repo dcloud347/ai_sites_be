@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -22,7 +23,7 @@ import java.util.List;
  */
 public interface IMessageService extends IService<Message> {
 
-    ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto);
+    ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request);
 
     ResponseEntity<Result<List<ChatRecordVo>>> record(String id);
 
