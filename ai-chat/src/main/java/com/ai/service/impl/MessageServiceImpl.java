@@ -69,10 +69,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     // 判断标题是否修改重新总结
     private boolean isPastTitle(String title) {
-        String regex = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(title);
-        return matcher.matches();
+        return "new chat".equals(title);
     }
 
     private String clear(String text){

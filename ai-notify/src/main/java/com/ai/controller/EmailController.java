@@ -1,5 +1,6 @@
 package com.ai.controller;
 
+import com.ai.dto.EmailDto;
 import com.ai.util.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -29,6 +30,11 @@ public class EmailController {
         return Result.success();
     }
 
+    @PostMapping("sendCode2")
+    public Result sendCode2(@RequestBody EmailDto emailDto){
+        sendMail(emailDto.getEmail(), emailDto.getCode());
+        return Result.success();
+    }
     private void sendMail(String email, String code) {
         SimpleMailMessage mimeMessage = new SimpleMailMessage();
         mimeMessage.setFrom(sender);

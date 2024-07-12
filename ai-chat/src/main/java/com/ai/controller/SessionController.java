@@ -7,10 +7,9 @@ import com.ai.model.LoginEntity;
 import com.ai.service.ISessionService;
 import com.ai.util.CommonUtil;
 import com.ai.util.Result;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.ai.util.ResultCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
@@ -36,10 +35,7 @@ public class SessionController {
         if (session == null){
             session = new Session();
         }
-        String ip = CommonUtil.getIpAddr(request);
-        Mono<LocalDateTime> dateTime = this.sessionService.getTimeZone(ip);
-        LocalDateTime localDateTime = dateTime.block();
-        session.setTitle(localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).setStartTime(localDateTime);
+        session.setTitle("new chat");
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         session.setUserId(loginEntity.getUserId());
         sessionService.save(session);
@@ -48,5 +44,21 @@ public class SessionController {
         return Result.success(map);
     }
 
+    /**
+     * 删除指定的session
+     */
+    @DeleteMapping
+    @LoginRequired
+    public ResponseEntity<Result> delete(@RequestParam String id){
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        Session session = sessionService.getById(id);
+        if (session == null){
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("The session corresponding to this ID does not exist"));
+        }else if (session.getUserId() != loginEntity.getUserId()){
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("You have no right to delete someone else's conversation"));
+        }
+        sessionService.removeById(id);
+        return ResponseEntity.ok().body(Result.success());
+    }
 
 }
