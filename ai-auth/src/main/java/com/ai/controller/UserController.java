@@ -1,7 +1,10 @@
 package com.ai.controller;
 
+import com.ai.annotation.LoginRequired;
+import com.ai.aspect.LoginAspect;
 import com.ai.dto.LoginDto;
 import com.ai.feign.EmailService;
+import com.ai.model.LoginEntity;
 import com.ai.service.IUserService;
 import com.ai.util.CommonUtil;
 import com.ai.util.Result;
@@ -76,5 +79,16 @@ public class UserController {
     @PostMapping("generate")
     public ResponseEntity<Result<LoginDto>> generate(){
         return userService.generate();
+    }
+
+    /**
+     * 注销账号
+     */
+    @PostMapping("cancel")
+    @LoginRequired
+    public Result cancel(){
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        userService.removeById(loginEntity.getUserId());
+        return Result.success();
     }
 }

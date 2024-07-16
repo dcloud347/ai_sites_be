@@ -99,6 +99,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ArrayList<String> list = new ArrayList<>();
+//        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "如果用户提到公式，那么公式部分采用反引号"));
         if (chatDto.getSessionId() == null){
             // 新建对话
             Session session = new Session();
