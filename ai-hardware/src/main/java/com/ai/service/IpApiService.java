@@ -25,6 +25,7 @@ public class IpApiService {
     }
 
     private String extractTimeZoneFromResponse(String response) {
+        System.out.println(response);
         // 简单的JSON解析，可以用更强大的JSON库来解析
         String timeZone = response.split("\"timezone\":\"")[1].split("\"")[0];
         return timeZone;

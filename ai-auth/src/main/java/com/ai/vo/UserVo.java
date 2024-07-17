@@ -10,6 +10,7 @@ import java.time.LocalDate;
  */
 @Data
 public class UserVo {
+    private Integer id;
     private String nick;
     private String email;
     private String lastIp;
@@ -17,6 +18,7 @@ public class UserVo {
     private LocalDate lastDate;
     private String code;
     public UserVo(User user){
+        id = user.getId();
         nick = user.getNick();
         email = user.getEmail();
         lastIp = user.getLastIp();

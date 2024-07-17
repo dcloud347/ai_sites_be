@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -55,8 +56,8 @@ public class MessageController {
      */
     @PostMapping
     @LoginRequired
-    public ResponseEntity<Result<ChatVo>> chat(@RequestBody ChatDto chatDto){
-        return messageService.chat(chatDto);
+    public ResponseEntity<Result<ChatVo>> chat(@RequestBody ChatDto chatDto, HttpServletRequest request){
+        return messageService.chat(chatDto, request);
     }
     /**
      * 查询我的所有会话记录
@@ -114,5 +115,14 @@ public class MessageController {
     @LoginRequired
     public Result getSession(){
         return sessionService.getSession();
+    }
+
+    /**
+     * 查询某用户会话下的聊天记录
+     */
+    @GetMapping("chat/{id}")
+    public Result getChat(@PathVariable String id){
+        ResponseEntity<Result<List<ChatRecordVo>>> record = messageService.record(id);
+        return record.getBody();
     }
 }
