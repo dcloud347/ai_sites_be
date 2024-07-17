@@ -13,6 +13,4 @@ ADD /target/ai-auth-0.0.1-SNAPSHOT.jar auth.jar
 
 EXPOSE 8000
 # 运行jar包
-# touch命令，如果没有文件创建则创建文件，如果文件已存在，则修改时间戳
-RUN bash -c 'touch /auth.jar'
 ENTRYPOINT ["java","-jar","/auth.jar", "--env=8056ed5a-a62c-4aa2-aa9b-615bc6764eb3"]
