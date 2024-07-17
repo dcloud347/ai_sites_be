@@ -8,6 +8,7 @@ import com.ai.service.ISessionService;
 import com.ai.util.CommonUtil;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
+import com.ai.vo.SessionVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author 刘晨
@@ -71,5 +73,14 @@ public class SessionController {
     @Lazy(value = false)
     public void delete(){
         sessionService.remove(new QueryWrapper<Session>().eq("title", "new chat"));
+    }
+
+    /**
+     * 查询某用户的所有会话记录
+     */
+    @GetMapping("user/{id}")
+    public Result<List<Session>> select(@PathVariable String id){
+        List<Session> list = sessionService.list(new QueryWrapper<Session>().eq("user_id", id).orderByDesc("id"));
+        return Result.success(list);
     }
 }
