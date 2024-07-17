@@ -70,8 +70,6 @@ public class SessionController {
     @Scheduled(fixedRate = 1000 * 60 * 5)
     @Lazy(value = false)
     public void delete(){
-        System.out.println("---------------");
-        System.out.println("执行定时任务");
         sessionService.remove(new QueryWrapper<Session>().eq("title", "new chat"));
     }
 }
