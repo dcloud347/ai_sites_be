@@ -30,7 +30,7 @@ import java.io.IOException;
 @Service
 public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IFileService {
     @Resource
-    private OssUtils ossUtils;
+    private OssUtils ossUtils = new OssUtils();
     @Override
     public ResponseEntity<Result<UploadVo>> uploadFile(MultipartFile file) {
         if (file.isEmpty()) {
@@ -45,7 +45,8 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
             String t = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
             // 上传到对象存储
             String name = loginEntity.getUserId() + "/"  + CommonUtil.generateUUID() + t;
-            String url = ossUtils.uploadFile(file, name, "ai-sites-chatting-files");
+            String container_name = "ai-sites-chatting-files";
+            String url = ossUtils.uploadFile(file, name, container_name);
             uploadVo.setUrl(url);
             this.save(new File(uploadVo));
             return ResponseEntity.ok(Result.success(uploadVo));

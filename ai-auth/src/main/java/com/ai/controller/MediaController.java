@@ -6,8 +6,6 @@ import com.ai.model.LoginEntity;
 import com.ai.util.CommonUtil;
 import com.ai.util.OssUtils;
 import com.ai.util.Result;
-import com.azure.storage.blob.BlobClient;
-import com.azure.storage.blob.BlobContainerClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,11 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author 刘晨
@@ -41,7 +36,8 @@ public class MediaController {
         // 文件类型
         String t = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
         String name = loginEntity.getUserId() + "/"  + CommonUtil.generateUUID() + t;
-        String url = ossUtils.uploadFile(file, name,"ai-sites-media");
+        String container_name = "ai-sites-media";
+        String url = ossUtils.uploadFile(file, name, container_name);
         HashMap<String, Object> map = new HashMap<>(1);
         map.put("url", url);
         return Result.success(map);
