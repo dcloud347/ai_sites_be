@@ -15,7 +15,7 @@ import java.io.IOException;
 public class OssUtils {
     String yourSasToken = "sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2025-05-30T18:33:51Z&st=2024-05-30T10:33:51Z&spr=https&sig=O36ij%2Bc6LxCAOzcg%2BmYZWRzIcJPQwK%2FMZB8ROzKhFd4%3D";
 
-    public String uploadFile(MultipartFile file, String remote_file_name) throws BlobStorageException {
+    public String uploadFile(MultipartFile file, String remote_file_name, String container_name) throws BlobStorageException {
         /* Create a new BlobServiceClient with a SAS Token */
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
                 .endpoint("https://aisiteadmin.blob.core.windows.net")
@@ -25,13 +25,13 @@ public class OssUtils {
         /* Create a new container client */
         BlobContainerClient containerClient;
         try {
-            containerClient = blobServiceClient.createBlobContainer("ai-sites-avatar");
+            containerClient = blobServiceClient.createBlobContainer(container_name);
         } catch (BlobStorageException ex) {
             // The container may already exist, so don't throw an error
             if (!ex.getErrorCode().equals(BlobErrorCode.CONTAINER_ALREADY_EXISTS)) {
                 throw ex;
             }else{
-                containerClient = blobServiceClient.getBlobContainerClient("ai-sites-avatar");
+                containerClient = blobServiceClient.getBlobContainerClient(container_name);
             }
         }
 
@@ -44,9 +44,4 @@ public class OssUtils {
         }
         return blobClient.getBlobUrl();
     }
-    public static void main(String[] args){
-        OssUtils ossUtils = new OssUtils();
-    }
-
-
 }

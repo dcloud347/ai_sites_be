@@ -45,7 +45,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
             String t = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
             // 上传到对象存储
             String name = loginEntity.getUserId() + "/"  + CommonUtil.generateUUID() + t;
-            String url = ossUtils.uploadFile(file, name);
+            String url = ossUtils.uploadFile(file, name, "ai-sites-chatting-files");
             uploadVo.setUrl(url);
             this.save(new File(uploadVo));
             return ResponseEntity.ok(Result.success(uploadVo));

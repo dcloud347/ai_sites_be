@@ -41,7 +41,7 @@ public class MediaController {
         // 文件类型
         String t = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
         String name = loginEntity.getUserId() + "/"  + CommonUtil.generateUUID() + t;
-        String url = ossUtils.uploadFile(file, name);
+        String url = ossUtils.uploadFile(file, name,"ai-sites-media");
         HashMap<String, Object> map = new HashMap<>(1);
         map.put("url", url);
         return Result.success(map);
