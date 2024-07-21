@@ -1,6 +1,5 @@
 package com.ai.aspect;
 
-import com.ai.annotation.LoginRequired;
 import com.ai.enums.RedisPrefixEnum;
 import com.ai.model.LoginEntity;
 import com.ai.util.CommonUtil;
@@ -10,7 +9,6 @@ import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;

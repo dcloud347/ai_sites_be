@@ -7,31 +7,23 @@ import com.ai.entity.Session;
 import com.ai.model.LoginEntity;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
-import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
 import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.ai.vo.SessionVo;
-import com.ai.vo.UploadVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import org.apache.poi.ss.formula.functions.Today;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.Flux;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * <p>

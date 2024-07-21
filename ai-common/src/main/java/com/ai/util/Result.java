@@ -1,20 +1,14 @@
 package com.ai.util;
 
 import lombok.Data;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 返回结果
  * @author 刘晨
  */
-import lombok.Data;
-
-import java.io.Serializable;
 
 @Data
 @Accessors(chain = true)

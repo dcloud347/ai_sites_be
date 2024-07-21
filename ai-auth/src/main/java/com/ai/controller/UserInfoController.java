@@ -3,7 +3,6 @@ package com.ai.controller;
 import com.ai.annotation.LoginRequired;
 import com.ai.dto.UserInfoDto;
 import com.ai.entity.User;
-import com.ai.feign.EmailService;
 import com.ai.service.IUserService;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
@@ -12,7 +11,6 @@ import com.ai.vo.UserVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

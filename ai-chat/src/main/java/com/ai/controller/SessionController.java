@@ -5,21 +5,16 @@ import com.ai.aspect.LoginAspect;
 import com.ai.entity.Session;
 import com.ai.model.LoginEntity;
 import com.ai.service.ISessionService;
-import com.ai.util.CommonUtil;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
-import com.ai.vo.SessionVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 

@@ -1,7 +1,6 @@
 package com.ai.exceptionHandler;
 import com.ai.util.Result;
 import com.ai.util.ResultCode;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;

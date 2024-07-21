@@ -3,7 +3,6 @@ package com.ai.controller;
 
 import com.ai.annotation.LoginRequired;
 import com.ai.service.ISpeechService;
-import com.ai.service.impl.SpeechServiceImpl;
 import com.ai.util.Result;
 import com.ai.vo.SpeechTextVo;
 import org.springframework.http.ResponseEntity;
