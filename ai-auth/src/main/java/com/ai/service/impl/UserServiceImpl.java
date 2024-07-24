@@ -161,4 +161,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         this.updateById(one);
         return ResponseEntity.ok(Result.success(new LoginVo(genToken(one))));
     }
+
+    public Result logout(String token){
+        stringRedisTemplate.delete(RedisPrefixEnum.USER_TOKEN.getPrefix() + token);
+        return Result.success();
+    }
+
 }

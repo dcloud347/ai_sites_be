@@ -98,4 +98,9 @@ public class UserController {
         userService.removeById(loginEntity.getUserId());
         return Result.success();
     }
+    @PostMapping("logout")
+    @LoginRequired
+    public Result logout(@RequestHeader("Token") String token){
+        return userService.logout(token);
+    }
 }
