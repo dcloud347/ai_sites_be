@@ -10,4 +10,6 @@ public class LoginEntity {
 
     private int userId;
 
+    private String type;
+
 }

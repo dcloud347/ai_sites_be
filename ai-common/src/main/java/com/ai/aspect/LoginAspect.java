@@ -45,13 +45,22 @@ public class LoginAspect {
             CommonUtil.sendJsonMessage(response, Result.error("未登录"));
             return false;
         }
-        String user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.USER_TOKEN.getPrefix() + accessToken);
-        if(user_id==null){
-            user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.SPEAKER_TOKEN.getPrefix() + accessToken);
-        }
-        if(user_id != null){
+        String user_token_user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.USER_TOKEN.getPrefix() + accessToken);
+        String speaker_token_user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.SPEAKER_TOKEN.getPrefix() + accessToken);
+        if(user_token_user_id != null){
             LoginEntity loginEntity = new LoginEntity();
-            loginEntity.setUserId(Integer.parseInt(user_id));
+            loginEntity.setUserId(Integer.parseInt(user_token_user_id));
+            loginEntity.setType("user");
+            //通过attribute传递用户信息
+            //request.setAttribute("loginUser",loginUser);
+            //通过threadLocal传递用户登录信息
+            threadLocal.set(loginEntity);
+            // 如果已经登录，则继续执行方法
+            return joinPoint.proceed();
+        }else if(speaker_token_user_id !=null){
+            LoginEntity loginEntity = new LoginEntity();
+            loginEntity.setUserId(Integer.parseInt(speaker_token_user_id));
+            loginEntity.setType("speaker");
             //通过attribute传递用户信息
             //request.setAttribute("loginUser",loginUser);
             //通过threadLocal传递用户登录信息
