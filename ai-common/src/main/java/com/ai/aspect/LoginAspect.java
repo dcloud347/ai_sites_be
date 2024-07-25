@@ -41,10 +41,14 @@ public class LoginAspect {
 
         String accessToken = request.getHeader("token");
         if(accessToken == null) {
+            response.setStatus(Result.error().getCode());
             CommonUtil.sendJsonMessage(response, Result.error("未登录"));
             return false;
         }
         String user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.USER_TOKEN.getPrefix() + accessToken);
+        if(user_id==null){
+            user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.SPEAKER_TOKEN.getPrefix() + accessToken);
+        }
         if(user_id != null){
             LoginEntity loginEntity = new LoginEntity();
             loginEntity.setUserId(Integer.parseInt(user_id));
@@ -55,6 +59,7 @@ public class LoginAspect {
             // 如果已经登录，则继续执行方法
             return joinPoint.proceed();
         }
+        response.setStatus(Result.error().getCode());
         CommonUtil.sendJsonMessage(response, Result.error("未登录"));
         return false;
     }

@@ -41,5 +41,7 @@ public interface IUserService extends IService<User> {
 
     ResponseEntity<Result<LoginVo>> googleLogin(String token, HttpServletRequest request);
 
-    Result logout(String token);
+    Result<String> logout(String token);
+
+    ResponseEntity<Result<LoginVo>> speakerLogin(LoginDto loginDto,  HttpServletRequest request);
 }

@@ -48,20 +48,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     private UserMapper userMapper;
     @Override
     public ResponseEntity<Result<LoginVo>> login(LoginDto loginDto, HttpServletRequest request) {
-        User user = new User(loginDto);
-        User one;
-        one = this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
-        if(one == null){
-            one = this.getOne(new QueryWrapper<User>().eq("username", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
-        }
-        if (one == null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Username or password incorrect."));
-        }
-        // 修改上次登录的ip
-        String ip = CommonUtil.getIpAddr(request);
-        one.setLastIp(ip);
-        this.updateById(one);
-        return ResponseEntity.ok(Result.success(new LoginVo(genToken(one))));
+        return login_(loginDto,request,RedisPrefixEnum.USER_TOKEN.getPrefix());
     }
 
     @Override
@@ -77,7 +64,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         User user = new User(loginDto);
         this.save(user);
-        return ResponseEntity.ok(Result.success(new LoginVo(genToken(user))));
+        return ResponseEntity.ok(Result.success(new LoginVo(genToken(user,RedisPrefixEnum.USER_TOKEN.getPrefix()))));
     }
 
     @Override
@@ -88,7 +75,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         User user = new User(loginDto);
         this.save(user);
-        return ResponseEntity.ok(Result.success(new LoginVo(genToken(user))));
+        return ResponseEntity.ok(Result.success(new LoginVo(genToken(user, RedisPrefixEnum.USER_TOKEN.getPrefix()))));
     }
 
     @Override
@@ -129,21 +116,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return Result.success(list);
     }
 
-    /**
-     * 发布token
-     */
-    private String genToken(User user){
-        HashMap<String, Object> map = new HashMap<>(1);
-        map.put("id", user.getId());
-        String token = JwtUtil.generateJwtToken(map);
-        // 将token存入redis
-        stringRedisTemplate.opsForValue().set(RedisPrefixEnum.USER_TOKEN.getPrefix() + token, user.getId().toString(),20, TimeUnit.DAYS);
-        // 更新上次登录时间
-        user.setLastDate(LocalDate.now());
-        this.updateById(user);
-        return token;
-    }
-
+    @Override
     public ResponseEntity<Result<LoginVo>> googleLogin(String token, HttpServletRequest request){
         String email = GoogleUtil.get_email(token);
         if(email==null){
@@ -159,12 +132,53 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String ip = CommonUtil.getIpAddr(request);
         one.setLastIp(ip);
         this.updateById(one);
-        return ResponseEntity.ok(Result.success(new LoginVo(genToken(one))));
+        return ResponseEntity.ok(Result.success(new LoginVo(genToken(one, RedisPrefixEnum.USER_TOKEN.getPrefix()))));
     }
 
-    public Result logout(String token){
+    @Override
+    public Result<String> logout(String token){
         stringRedisTemplate.delete(RedisPrefixEnum.USER_TOKEN.getPrefix() + token);
-        return Result.success();
+        return Result.success("");
     }
 
+    @Override
+    public ResponseEntity<Result<LoginVo>> speakerLogin(LoginDto loginDto, HttpServletRequest request) {
+        return login_(loginDto,request,RedisPrefixEnum.SPEAKER_TOKEN.getPrefix());
+    }
+
+    /**
+     * general登录
+     */
+
+    private ResponseEntity<Result<LoginVo>> login_(LoginDto loginDto, HttpServletRequest request, String prefix){
+        User user = new User(loginDto);
+        User one;
+        one = this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
+        if(one == null){
+            one = this.getOne(new QueryWrapper<User>().eq("username", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
+        }
+        if (one == null){
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Username or password incorrect."));
+        }
+        // 修改上次登录的ip
+        String ip = CommonUtil.getIpAddr(request);
+        one.setLastIp(ip);
+        this.updateById(one);
+        return ResponseEntity.ok(Result.success(new LoginVo(genToken(one, prefix))));
+    }
+
+    /**
+     * 发布token
+     */
+    private String genToken(User user, String prefix){
+        HashMap<String, Object> map = new HashMap<>(1);
+        map.put("id", user.getId());
+        String token = JwtUtil.generateJwtToken(map);
+        // 将token存入redis
+        stringRedisTemplate.opsForValue().set(prefix + token, user.getId().toString(),20, TimeUnit.DAYS);
+        // 更新上次登录时间
+        user.setLastDate(LocalDate.now());
+        this.updateById(user);
+        return token;
+    }
 }

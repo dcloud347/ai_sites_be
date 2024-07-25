@@ -98,9 +98,23 @@ public class UserController {
         userService.removeById(loginEntity.getUserId());
         return Result.success();
     }
+
+    /**
+     *  登出账号
+     */
+
     @PostMapping("logout")
     @LoginRequired
-    public Result logout(@RequestHeader("Token") String token){
+    public Result<String> logout(@RequestHeader("Token") String token){
         return userService.logout(token);
     }
+
+    /**
+     * 邮箱-密码登录
+     */
+    @PostMapping("speaker-login")
+    public ResponseEntity<Result<LoginVo>> speakerLogin(@RequestBody LoginDto loginDto,  HttpServletRequest request){
+        return userService.login(loginDto, request);
+    }
+
 }

@@ -15,6 +15,7 @@ public enum RedisPrefixEnum {
     USER_TOKEN("userToken:"),
     //管理员的token
     ADMIN_TOKEN("adminToken:"),
+    SPEAKER_TOKEN("speakerToken:"),
     SPEAKER_SESSION("speakerSession:");
     private final String prefix;
 
