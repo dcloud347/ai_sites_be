@@ -17,7 +17,5 @@ import java.time.LocalDateTime;
  */
 public interface ISessionService extends IService<Session> {
 
-    Result getSession();
-
     Mono<LocalDateTime> getTimeZone(String ip);
 }

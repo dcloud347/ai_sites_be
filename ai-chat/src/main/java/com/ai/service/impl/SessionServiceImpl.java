@@ -32,20 +32,7 @@ import java.util.TimeZone;
  */
 @Service
 public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> implements ISessionService {
-    @Resource
-    private RedisTemplate<String, Object> redisTemplate;
     private final WebClient webClient;
-
-    @Override
-    public Result getSession() {
-        LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        String key = RedisPrefixEnum.SPEAKER_SESSION.getPrefix() + loginEntity.getUserId();
-        Object o = redisTemplate.opsForValue().get(key);
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("sessionId", o);
-        return Result.success(map);
-    }
-
 
     public SessionServiceImpl(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl("http://ip-api.com").build();
