@@ -40,7 +40,6 @@ public class Gpt3Util {
                     "model": "%s",
                     "messages": [%s]
                 }""", model, String.join(",", conversationHistory));
-        System.out.println(jsonData);
         // 创建HttpClient
         HttpClient client = HttpClient.newHttpClient();
         // 构建HttpRequest

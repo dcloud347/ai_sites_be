@@ -79,7 +79,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error() {
-        return new Result<T>(ResultCode.BAD_REQUEST);
+        return new Result<T>(ResultCode.BAD_REQUEST.getCode());
     }
 
     /**
@@ -114,14 +114,14 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error(ResultCode resultCode) {
-        return new Result<T>(resultCode);
+        return new Result<T>(resultCode.getCode());
     }
 
     /**
      * 成功构造器,无返回数据
      */
     private Result() {
-        this(ResultCode.SUCCESS);
+        this(ResultCode.SUCCESS.getCode());
     }
 
     /**
@@ -130,7 +130,7 @@ public class Result<T> implements Serializable {
      * @param data 返回数据
      */
     private Result(T data) {
-        this(ResultCode.SUCCESS, data);
+        this(ResultCode.SUCCESS.getCode(), data);
     }
 
     /**
@@ -148,7 +148,7 @@ public class Result<T> implements Serializable {
      * @param msg  返回信息
      * @param data 返回数据
      */
-    private Result(String msg, T data) {
+    public Result(String msg, T data) {
         this(ResultCode.SUCCESS.getCode(), msg, data);
     }
 
@@ -158,7 +158,7 @@ public class Result<T> implements Serializable {
      * @param code 状态码
      * @param msg  返回消息
      */
-    private Result(int code, String msg) {
+    public Result(int code, String msg) {
         this.code = code;
         this.msg = msg;
     }
@@ -170,32 +170,29 @@ public class Result<T> implements Serializable {
      * @param msg  返回消息
      * @param data 返回数据
      */
-    private Result(int code, String msg, T data) {
-        this(code, msg);
+    public Result(int code, String msg, T data) {
+        this.code = code;
+        this.msg = msg;
         this.data = data;
     }
 
     /**
-     * 构造器,使用CodeMsg状态码与返回信息
+     * 构造器,自定义状态码,返回消息
      *
-     * @param resultCode CodeMsg,参数如下:
-     *                   <p> code 状态码
-     *                   <p> msg  返回消息
+     * @param code 状态码
      */
-    private Result(ResultCode resultCode) {
-        this(resultCode.getCode(), resultCode.getMsg());
+    public Result(int code){
+        this.code = code;
     }
 
     /**
-     * 构造器,使用CodeMsg状态码与返回信息,自定义返回数据
+     * 构造器,自定义状态码,返回消息
      *
-     * @param resultCode CodeMsg,参数如下:
-     *                   <p> code 状态码
-     *                   <p> msg  返回消息
-     * @param data       返回数据
+     * @param code 状态码
+     * @param data  返回数据
      */
-    private Result(ResultCode resultCode, T data) {
-        this(resultCode);
+    public Result(int code, T data) {
+        this.code = code;
         this.data = data;
     }
 }

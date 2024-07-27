@@ -6,6 +6,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import com.ai.exceptions.CustomException;
 import org.springframework.web.multipart.MultipartException;
 
 import java.util.List;
@@ -28,6 +29,11 @@ public class GlobalExceptionHandler {
             }
         }
         return Result.error(message.toString());
+    }
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<Result<String>> handleCustomException(CustomException customException) {
+        return ResponseEntity.status(customException.getCode().getCode()).
+                body(new Result<>(customException.getCode().getCode(),customException.getMessage()));
     }
 }
 

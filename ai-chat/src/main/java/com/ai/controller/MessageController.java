@@ -4,11 +4,11 @@ import com.ai.annotation.LoginRequired;
 import com.ai.aspect.LoginAspect;
 import com.ai.dto.ChatDto;
 import com.ai.entity.Session;
+import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
 import com.ai.util.Result;
-import com.ai.util.ResultCode;
 import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.ai.vo.SessionVo;
@@ -90,12 +90,12 @@ public class MessageController {
      */
     @GetMapping("{id}")
     @LoginRequired
-    public ResponseEntity<Result<List<ChatRecordVo>>> record(@PathVariable String id){
+    public ResponseEntity<Result<List<ChatRecordVo>>> record(@PathVariable String id) throws CustomException {
         // 只能查询自己的聊天记录，防越权攻击
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         Session session = sessionService.getById(id);
         if (session == null || session.getUserId() != loginEntity.getUserId()){
-            return ResponseEntity.status(ResultCode.ERROR.getCode()).body(Result.error("No access to the resources"));
+            throw new CustomException("No access to the resources");
         }
         return messageService.record(id);
     }

@@ -7,6 +7,7 @@ import com.ai.entity.File;
 import com.ai.entity.Message;
 import com.ai.entity.Session;
 import com.ai.enums.RedisPrefixEnum;
+import com.ai.exceptions.CustomException;
 import com.ai.mapper.MessageMapper;
 import com.ai.model.LoginEntity;
 import com.ai.service.IFileService;
@@ -15,7 +16,6 @@ import com.ai.service.ISessionService;
 import com.ai.util.CommonUtil;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
-import com.ai.util.ResultCode;
 import com.ai.vo.ChatRecordVo;
 import com.ai.vo.ChatVo;
 import com.alibaba.fastjson.JSON;
@@ -80,14 +80,25 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         JSONObject choice = choices.getJSONObject(0);
         return choice.getJSONObject("message");
     }
+
+    private boolean isImage(String filename){
+        filename = filename.toLowerCase();
+        // 判断文件名是否以图片格式的扩展名结束
+        return filename.endsWith(".png") ||
+                filename.endsWith(".jpeg") ||
+                filename.endsWith(".jpg") ||
+                filename.endsWith(".webp") ||
+                filename.endsWith(".gif");
+    }
+
     @Override
-    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) {
+    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) throws CustomException {
         String model;
         switch (chatDto.getMode()){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
             case "gpt4" -> model = "gpt-4-turbo-preview";
             case "gpt-4o" -> model = "gpt-4o";
-            default -> {return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Unrecognised models" + chatDto.getMode()));}
+            default -> throw new CustomException("Unrecognised models" + chatDto.getMode());
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ArrayList<String> list = new ArrayList<>();
@@ -109,11 +120,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     .eq("session_id", chatDto.getSessionId())
                     // 按创建时间升序排序
                     .orderByAsc("create_time");
+            System.out.println("聊天记录:"+this.list(queryWrapper).toString());
             // 查询出之前的聊天记录，并发回给chatgpt
             this.list(queryWrapper).forEach(message -> {
                 list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), clear(message.getContent())));
                 if (message.getFileId() != null){
-                    // 把文件带上去聊天
+                    // 把文件带上去聊天 未完成
                     list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,this is the ID of multiple files, separated by English commas\"}", "system", message.getFileId()));
                 }
             });
@@ -130,11 +142,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         // 发送消息
         String chat = gpt3Util.chat(list, model);
         if (chat == null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Network Error"));
+            throw new CustomException("Network Error");
         }
         JSONObject msg = analysis(chat);
         if (msg == null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("gpt error"));
+            throw new CustomException("gpt error");
         }
         String role = msg.getString("role");
         String content = msg.getString("content");
@@ -186,7 +198,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             String title = gpt3Util.chat(list, model);
             JSONObject msg1 = analysis(title);
             if (msg1 == null){
-                return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("gpt error"));
+                throw new CustomException("gpt error");
             }
             String content1 = msg1.getString("content");
             System.out.println(content1);

@@ -3,10 +3,10 @@ package com.ai.controller;
 import com.ai.annotation.LoginRequired;
 import com.ai.aspect.LoginAspect;
 import com.ai.entity.Session;
+import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
 import com.ai.service.ISessionService;
 import com.ai.util.Result;
-import com.ai.util.ResultCode;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
@@ -49,13 +49,13 @@ public class SessionController {
      */
     @DeleteMapping
     @LoginRequired
-    public ResponseEntity<Result> delete(@RequestParam String id){
+    public ResponseEntity<Result> delete(@RequestParam String id) throws CustomException {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         Session session = sessionService.getById(id);
         if (session == null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("The session corresponding to this ID does not exist"));
+            throw new CustomException("The session corresponding to this ID does not exist");
         }else if (session.getUserId() != loginEntity.getUserId()){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("You have no right to delete someone else's conversation"));
+            throw new CustomException("You have no right to delete someone else's conversation");
         }
         sessionService.removeById(id);
         return ResponseEntity.ok().body(Result.success());

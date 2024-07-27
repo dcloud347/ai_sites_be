@@ -6,6 +6,7 @@ import com.ai.model.LoginEntity;
 import com.ai.util.CommonUtil;
 import com.ai.util.OssUtils;
 import com.ai.util.Result;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,9 +27,13 @@ public class MediaController {
     @Resource
     private OssUtils ossUtils;
 
+    @Value("${oss.media}")
+    private String media_container;
+
     /**
      * 上传文件
      */
+
     @PostMapping
     @LoginRequired
     public Result<Map<String, Object>> uploadFile(@RequestParam("file") MultipartFile file){
@@ -36,8 +41,7 @@ public class MediaController {
         // 文件类型
         String t = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
         String name = loginEntity.getUserId() + "/"  + CommonUtil.generateUUID() + t;
-        String container_name = "ai-sites-media";
-        String url = ossUtils.uploadFile(file, name, container_name);
+        String url = ossUtils.uploadFile(file, name, media_container);
         HashMap<String, Object> map = new HashMap<>(1);
         map.put("url", url);
         return Result.success(map);
