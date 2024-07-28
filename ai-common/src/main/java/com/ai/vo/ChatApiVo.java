@@ -27,7 +27,7 @@ public class ChatApiVo {
 
     public void addImageMessage(String image_url,String text){
         TextContentApiVo textContentApiVo = new TextContentApiVo().setText(text);
-        ImageContentApiVo imageContentApiVo = new ImageContentApiVo().setImage_url(image_url);
+        ImageContentApiVo imageContentApiVo = new ImageContentApiVo().setImage_url(new ImageURL(image_url));
         List<ContentApiVo> contents = new ArrayList<>();
         contents.add(textContentApiVo);
         contents.add(imageContentApiVo);

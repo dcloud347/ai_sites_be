@@ -11,5 +11,5 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 public class ImageContentApiVo extends ContentApiVo{
     private final String type = "image_url";
-    private String image_url;
+    private ImageURL image_url;
 }

@@ -63,6 +63,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Resource
     private IFileService fileService;
 
+    private final List<String> vision_models = List.of(new String[]{"gpt-4-turbo", "gpt-4o"});
+
     // 判断标题是否修改重新总结
     private boolean isPastTitle(String title) {
         return "new chat".equals(title);
@@ -98,12 +100,15 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         String model;
         switch (chatDto.getMode()){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
-            case "gpt4" -> model = "gpt-4-turbo-preview";
+            case "gpt4" -> model = "gpt-4-turbo";
             case "gpt-4o" -> model = "gpt-4o";
-            default -> throw new CustomException("Unrecognised models" + chatDto.getMode());
+            default -> throw new CustomException("Unrecognised models " + chatDto.getMode());
+        }
+        if(!chatDto.getFileId().isEmpty() && !vision_models.contains(model)){
+            throw new CustomException(model+" have no vision capabilities!");
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        ChatApiVo chatApiVo = new ChatApiVo().setModel(chatDto.getMode());
+        ChatApiVo chatApiVo = new ChatApiVo().setModel(model);
         if (chatDto.getSessionId() == null){
             // 新建对话
             Session session = new Session();

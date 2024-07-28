@@ -22,7 +22,7 @@ public class MessageApiVo {
         addContent(textContentApiVo);
     }
     public void addImageContent(String image_url){
-        ImageContentApiVo imageContentApiVo = new ImageContentApiVo().setImage_url(image_url);
+        ImageContentApiVo imageContentApiVo = new ImageContentApiVo().setImage_url(new ImageURL(image_url));
         addContent(imageContentApiVo);
     }
 }
