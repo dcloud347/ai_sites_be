@@ -108,6 +108,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             throw new CustomException(model+" have no vision capabilities!");
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        if(chatDto.getSessionId()!=null && sessionService.getById(chatDto.getSessionId()).getUserId()!=loginEntity.getUserId()){
+            throw new CustomException("No access to this session!");
+        }
         ChatApiVo chatApiVo = new ChatApiVo().setModel(model);
         if (chatDto.getSessionId() == null){
             // 新建对话
