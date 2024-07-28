@@ -18,10 +18,7 @@ import com.ai.service.ISessionService;
 import com.ai.util.CommonUtil;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
-import com.ai.vo.ChatRecordVo;
-import com.ai.vo.ChatApiVo;
-import com.ai.vo.ChatVo;
-import com.ai.vo.MessageApiVo;
+import com.ai.vo.*;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -214,7 +211,15 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     public ResponseEntity<Result<List<ChatRecordVo>>> record(String id) {
         ArrayList<ChatRecordVo> chatRecordVos = new ArrayList<>();
         List<Message> messages = this.list(new QueryWrapper<Message>().eq("session_id", id));
-        messages.forEach(message -> chatRecordVos.add(new ChatRecordVo(message)));
+        messages.forEach(message -> {
+            QueryWrapper<File> fileQueryWrapper = new QueryWrapper<>();
+            fileQueryWrapper.select("filename","url")
+                    .eq("message_id", message.getId());
+            List<FileVo> fileVos = new ArrayList<>();
+            fileService.list(fileQueryWrapper).forEach(file -> fileVos.add(new FileVo(file)));
+            chatRecordVos.add(new ChatRecordVo(message).setFiles(fileVos));
+
+        });
         return ResponseEntity.ok(Result.success(chatRecordVos));
     }
 

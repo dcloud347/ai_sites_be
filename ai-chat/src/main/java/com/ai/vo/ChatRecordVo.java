@@ -3,6 +3,7 @@ package com.ai.vo;
 import com.ai.entity.Message;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  */
 @Data
 @NoArgsConstructor
+@Accessors(chain = true)
 public class ChatRecordVo {
     /**
      * 回复的消息
