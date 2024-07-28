@@ -145,12 +145,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         });
         MessageApiVo messageApiVo = new MessageApiVo().setRole(Role.user.toString());
         messageApiVo.addTextContent(chatDto.getContent());
-        chatDto.getFileId().forEach(fileId -> {
-            File file = fileService.getById(fileId);
-            if(isImage(file.getFilename())){
-                messageApiVo.addImageContent(file.getUrl());
-            }
-        });
+        if(chatDto.getFileId()!=null){
+            chatDto.getFileId().forEach(fileId -> {
+                File file = fileService.getById(fileId);
+                if(isImage(file.getFilename())){
+                    messageApiVo.addImageContent(file.getUrl());
+                }
+            });
+        }
         chatApiVo.addMessage(messageApiVo);
         // 使单次对话不会太长
         if (chatApiVo.getMessages().size() > 20){
