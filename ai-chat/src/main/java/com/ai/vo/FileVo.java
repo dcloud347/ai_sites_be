@@ -24,6 +24,6 @@ public class FileVo {
         filename = file.getFilename();
         bytes = file.getBytes();
         created_at = LocalDateTimeFormatterUtils.localDateTimeToString(file.getCreatedAt());
-        url = url;
+        url = file.getUrl();
     }
 }
