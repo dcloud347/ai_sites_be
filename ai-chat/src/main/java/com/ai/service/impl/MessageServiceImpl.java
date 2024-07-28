@@ -172,6 +172,13 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         Message message = new Message(chatDto);
         message.setRole(Role.user);
         this.save(message);
+        if(chatDto.getFileId()!=null){
+            chatDto.getFileId().forEach(fileId -> {
+                File file = fileService.getById(fileId);
+                file.setMessageId(message.getId());
+                fileService.updateById(file);
+            });
+        }
         // 保存gpt的回复
         ChatVo chatVo = new ChatVo();
         chatVo.setMessage(content).setSessionId(chatDto.getSessionId()).setModel(chatDto.getMode());
@@ -213,7 +220,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         List<Message> messages = this.list(new QueryWrapper<Message>().eq("session_id", id));
         messages.forEach(message -> {
             QueryWrapper<File> fileQueryWrapper = new QueryWrapper<>();
-            fileQueryWrapper.select("filename","url")
+            fileQueryWrapper.select("id","filename","bytes","created_at","url")
                     .eq("message_id", message.getId());
             List<FileVo> fileVos = new ArrayList<>();
             fileService.list(fileQueryWrapper).forEach(file -> fileVos.add(new FileVo(file)));
