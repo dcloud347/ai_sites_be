@@ -104,7 +104,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             case "gpt-4o" -> model = "gpt-4o";
             default -> throw new CustomException("Unrecognised models " + chatDto.getMode());
         }
-        if(!chatDto.getFileId().isEmpty() && !vision_models.contains(model)){
+        if(chatDto.getFileId()!=null && !vision_models.contains(model)){
             throw new CustomException(model+" have no vision capabilities!");
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
