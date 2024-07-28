@@ -131,7 +131,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public ResponseEntity<Result<LoginVo>> speakerLogin(LoginDto loginDto, HttpServletRequest request) {
-        return login_(loginDto,request,RedisPrefixEnum.SPEAKER_TOKEN.getPrefix());
+        return login_(loginDto,request,RedisPrefixEnum.ROBOT_TOKEN.getPrefix());
     }
 
     /**

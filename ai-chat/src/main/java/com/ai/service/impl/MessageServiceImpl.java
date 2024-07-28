@@ -189,7 +189,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         this.save(message1);
         if(Type.ROBOT.equals(chatDto.getType())){
             // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
-            String key = RedisPrefixEnum.SPEAKER_SESSION.getPrefix() + loginEntity.getUserId();
+            String key = RedisPrefixEnum.ROBOT_SESSION.getPrefix() + loginEntity.getUserId();
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
         }
         // 更新对话时间

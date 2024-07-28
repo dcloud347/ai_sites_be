@@ -46,7 +46,7 @@ public class LoginAspect {
             return false;
         }
         String user_token_user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.USER_TOKEN.getPrefix() + accessToken);
-        String speaker_token_user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.SPEAKER_TOKEN.getPrefix() + accessToken);
+        String speaker_token_user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.ROBOT_TOKEN.getPrefix() + accessToken);
         if(user_token_user_id != null){
             LoginEntity loginEntity = new LoginEntity();
             loginEntity.setUserId(Integer.parseInt(user_token_user_id));
