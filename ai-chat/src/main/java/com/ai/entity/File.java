@@ -32,6 +32,11 @@ public class File implements Serializable {
     private String id;
 
     /**
+     * 关联消息id
+     */
+    private long messageId;
+
+    /**
      * 目的
      */
     private String purpose;

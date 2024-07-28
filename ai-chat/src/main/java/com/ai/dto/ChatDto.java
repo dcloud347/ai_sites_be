@@ -1,5 +1,6 @@
 package com.ai.dto;
 
+import com.ai.enums.Type;
 import lombok.Data;
 
 import java.util.List;
@@ -15,11 +16,7 @@ public class ChatDto {
      * 会话id
      */
     private Long sessionId;
-    private String type;
-    /**
-     * 消息类型
-     */
-    private String messageType;
+    private Type type;
 
     /**
      * 消息内容

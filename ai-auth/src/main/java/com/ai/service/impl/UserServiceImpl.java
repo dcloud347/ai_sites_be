@@ -79,23 +79,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
-    public ResponseEntity<Result<LoginDto>> generate() {
-        String username = CommonUtil.generateUUID();
-        String password = CommonUtil.getRandomCode(8);
-        LoginDto loginDto = new LoginDto();
-        loginDto.setUsername(username);
-        loginDto.setPassword(password);
-        User user = new User(loginDto).setType("音箱");
-        this.save(user);
-        return ResponseEntity.ok(Result.success(loginDto));
-    }
-
-    @Override
     public Result updateUserInfo(UserInfoDto userInfoDto) {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         User user = this.getById(loginEntity.getUserId());
         user.setNick(userInfoDto.getNick());
-        user.setAvatar(userInfoDto.getAvatar());
+        user.setAvatar_url(userInfoDto.getAvatar());
         this.updateById(user);
         return Result.success();
     }

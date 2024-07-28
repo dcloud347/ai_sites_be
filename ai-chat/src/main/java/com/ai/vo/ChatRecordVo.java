@@ -4,6 +4,8 @@ import com.ai.entity.Message;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @author 刘晨
  */
@@ -21,12 +23,10 @@ public class ChatRecordVo {
 
     private String model;
     private String url;
-    private String messageType;
+    private List<FileVo> files;
     public ChatRecordVo(Message msg){
         message = msg.getContent();
-        role = msg.getRole();
+        role = msg.getRole().toString();
         model = msg.getModel();
-        url = msg.getFileUrl();
-        messageType = msg.getMessageType();
     }
 }

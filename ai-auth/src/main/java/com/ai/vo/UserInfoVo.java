@@ -12,11 +12,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserInfoVo {
-    private String avatar;
+    private String avatar_url;
     private String nick;
 
     public UserInfoVo(User user) {
-        avatar = user.getAvatar();
+        avatar_url = user.getAvatar_url();
         nick = user.getNick();
     }
 }

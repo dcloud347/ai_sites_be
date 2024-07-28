@@ -78,12 +78,7 @@ public class User implements Serializable {
     /**
      * 头像
      */
-    private String avatar;
-
-    /**
-     * 账号类型
-     */
-    private String type;
+    private String avatar_url;
 
     /**
      * 音箱编号

@@ -80,13 +80,6 @@ public class UserController {
     public ResponseEntity<Result<LoginVo>> googleLogin(@RequestBody String token, HttpServletRequest request){
         return userService.googleLogin(token, request);
     }
-    /**
-     * 生成账号密码 （供音箱使用）
-     */
-    @PostMapping("generate")
-    public ResponseEntity<Result<LoginDto>> generate(){
-        return userService.generate();
-    }
 
     /**
      * 注销账号

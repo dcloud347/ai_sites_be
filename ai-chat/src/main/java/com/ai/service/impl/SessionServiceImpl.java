@@ -37,24 +37,21 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
     @Override
     public Mono<LocalDateTime> getTimeZone(String ip) throws CustomException{
         // 解析返回的JSON，获取时区信息
+        // 解析返回的JSON，获取时区信息
         return this.webClient.get()
                 .uri("/json/{ip}", ip)
                 .retrieve()
                 .bodyToMono(String.class)
-                .map(response -> {
-                    // 解析返回的JSON，获取时区信息
-                    return extractTimeZoneFromResponse(response);
-                });
+                .map(this::extractTimeZoneFromResponse);
     }
 
     private LocalDateTime extractTimeZoneFromResponse(String response) throws CustomException{
-        // 简单的JSON解析，可以用更强大的JSON库来解析
-        System.out.println(response);
+        // JSON解析
         JsonObject jsonObject = JsonParser.parseString(response).getAsJsonObject();
         if(jsonObject.get("status").getAsString().equals("fail")){
             throw new CustomException("Local Time Parse Error");
         }
-        String timeZone = response.split("\"timezone\":\"")[1].split("\"")[0];
+        String timeZone = jsonObject.get("timezone").getAsString();
         TimeZone time = TimeZone.getTimeZone(timeZone);
         //格式
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

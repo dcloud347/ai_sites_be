@@ -7,6 +7,8 @@ import com.ai.entity.File;
 import com.ai.entity.Message;
 import com.ai.entity.Session;
 import com.ai.enums.RedisPrefixEnum;
+import com.ai.enums.Role;
+import com.ai.enums.Type;
 import com.ai.exceptions.CustomException;
 import com.ai.mapper.MessageMapper;
 import com.ai.model.LoginEntity;
@@ -17,7 +19,9 @@ import com.ai.util.CommonUtil;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
 import com.ai.vo.ChatRecordVo;
+import com.ai.vo.ChatApiVo;
 import com.ai.vo.ChatVo;
+import com.ai.vo.MessageApiVo;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -43,7 +47,7 @@ import java.util.concurrent.TimeUnit;
  * 消息表 服务实现类
  * </p>
  *
- * @author 
+ * @author 潘越
  * @since 2024-03-14
  */
 @Service
@@ -69,12 +73,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     }
 
     // 解析gpt的回复
-    private JSONObject analysis(String text){
+    private JSONObject analysis(String text) throws CustomException{
         JSONObject jsonObject = JSON.parseObject(text);
         if (jsonObject.getJSONObject("error") != null){
-            System.out.println("gpt出错");
-            System.out.println(jsonObject.getJSONObject("error").get("message").toString());
-            return null;
+            throw new CustomException("GPT Error.");
         }
         JSONArray choices = jsonObject.getJSONArray("choices");
         JSONObject choice = choices.getJSONObject(0);
@@ -101,8 +103,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             default -> throw new CustomException("Unrecognised models" + chatDto.getMode());
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        ArrayList<String> list = new ArrayList<>();
-//        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "如果用户提到公式，那么公式部分采用反引号"));
+        ChatApiVo chatApiVo = new ChatApiVo().setModel(chatDto.getMode());
         if (chatDto.getSessionId() == null){
             // 新建对话
             Session session = new Session();
@@ -110,75 +111,69 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             session.setType(chatDto.getType());
             sessionService.save(session);
             chatDto.setSessionId(session.getId());
-            if("speaker".equals(chatDto.getType())){
-                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "system", "Please reply in a short response"));
+            if(Type.ROBOT.equals(chatDto.getType())){
+                Message message = new Message();
+                message.setRole(Role.system).setSessionId(session.getId()).setContent("Please reply in a short response").setCreateTime(LocalDateTime.now());
+                this.save(message);
             }
-        }else {
-            QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
-            // 指定只查询content和role字段
-            queryWrapper.select("content", "role")
-                    .eq("session_id", chatDto.getSessionId())
-                    // 按创建时间升序排序
-                    .orderByAsc("create_time");
-            System.out.println("聊天记录:"+this.list(queryWrapper).toString());
-            // 查询出之前的聊天记录，并发回给chatgpt
-            this.list(queryWrapper).forEach(message -> {
-                list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message.getRole(), clear(message.getContent())));
-                if (message.getFileId() != null){
-                    // 把文件带上去聊天 未完成
-                    list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,this is the ID of multiple files, separated by English commas\"}", "system", message.getFileId()));
+        }
+
+        QueryWrapper<Message> messageQueryWrapper = new QueryWrapper<>();
+        // 指定只查询content和role字段
+        messageQueryWrapper.select("content", "role","id")
+                .eq("session_id", chatDto.getSessionId())
+                // 按创建时间升序排序
+                .orderByAsc("create_time");
+        // 查询出之前的聊天记录，并发回给chatgpt
+        this.list(messageQueryWrapper).forEach(message -> {
+            MessageApiVo messageApiVo = new MessageApiVo().setRole(message.getRole().toString());
+            messageApiVo.addTextContent(message.getContent());
+            QueryWrapper<File> fileQueryWrapper = new QueryWrapper<>();
+            fileQueryWrapper.select("filename","url")
+                    .eq("message_id", message.getId());
+            fileService.list(fileQueryWrapper).forEach(file -> {
+                if(isImage(file.getFilename())){
+                    messageApiVo.addImageContent(file.getUrl());
                 }
             });
-        }
-        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", chatDto.getContent()));
-        if (chatDto.getFileId() != null){
-            // 把文件带上去聊天
-            list.add(String.format("{\"role\": \"%s\", \"content\": \"The user has uploaded a file with ID: %s,this is the ID of multiple files, separated by English commas\"}", "system", chatDto.getFileId()));
-        }
+            chatApiVo.addMessage(messageApiVo);
+        });
+        MessageApiVo messageApiVo = new MessageApiVo().setRole(Role.user.toString());
+        messageApiVo.addTextContent(chatDto.getContent());
+        chatDto.getFileId().forEach(fileId -> {
+            File file = fileService.getById(fileId);
+            if(isImage(file.getFilename())){
+                messageApiVo.addImageContent(file.getUrl());
+            }
+        });
+        chatApiVo.addMessage(messageApiVo);
         // 使单次对话不会太长
-        if (list.size() > 20){
-            list.subList(0, list.size() - 20).clear();
+        if (chatApiVo.getMessages().size() > 20){
+            List<MessageApiVo> messages = chatApiVo.getMessages().subList(0,chatApiVo.getMessages().size()-20);
+            messages.clear();
+            chatApiVo.setMessages(messages);
         }
         // 发送消息
-        String chat = gpt3Util.chat(list, model);
+        String chat = gpt3Util.chat(chatApiVo);
         if (chat == null){
             throw new CustomException("Network Error");
         }
         JSONObject msg = analysis(chat);
-        if (msg == null){
-            throw new CustomException("gpt error");
-        }
-        String role = msg.getString("role");
+        Role role = Role.valueOf(msg.getString("role"));
         String content = msg.getString("content");
         // 保存聊天记录
         Message message = new Message(chatDto);
-        message.setRole("user").setUserId(loginEntity.getUserId());
+        message.setRole(Role.user);
         this.save(message);
-        // 如果有图片信息，保存文件的聊天记录
-        if(chatDto.getFileId()!=null){
-            List<String> stringList = chatDto.getFileId();
-            stringList.forEach(s -> {
-                // 获取文件信息
-                System.out.println(s);
-                File file = fileService.getOne(new QueryWrapper<File>().eq("id", s));
-                Message fileMessage = new Message(file);
-                fileMessage.setRole("user");
-                fileMessage.setUserId(loginEntity.getUserId());
-                fileMessage.setSessionId(chatDto.getSessionId());
-                System.out.println(fileMessage);
-                this.save(fileMessage);
-            });
-        }
         // 保存gpt的回复
         ChatVo chatVo = new ChatVo();
         chatVo.setMessage(content).setSessionId(chatDto.getSessionId()).setModel(chatDto.getMode());
-        System.out.println(content.strip());
         Message message1 = new Message(content.strip(), chatVo.getSessionId());
         message1.setModel(model);
-        message1.setUserId(loginEntity.getUserId()).setRole(role);
-        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", message1.getRole(), clear(message1.getContent())));
+        message1.setRole(role);
+        chatApiVo.addTextMessage(clear(message1.getContent()),message1.getRole().toString());
         this.save(message1);
-        if("speaker".equals(chatDto.getType())){
+        if(Type.ROBOT.equals(chatDto.getType())){
             // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
             String key = RedisPrefixEnum.SPEAKER_SESSION.getPrefix() + loginEntity.getUserId();
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
@@ -191,18 +186,15 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         session.setStartTime(localDateTime);
         // 总结标题
         if (isPastTitle(session.getTitle())){
-            list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user",
-                    "According to the content of the previous chat with me, give me a summary of a suitable title," +
-                            " I just want the title, other words, symbols do not want, within 20 words"));
+            chatApiVo.addTextMessage("According to the content of the previous chat with me," +
+                    " give me a summary of a suitable title,I just want the title, other words, symbols do not want," +
+                    " within 20 words",Role.user.toString());
             // 开始总结
-            String title = gpt3Util.chat(list, model);
+            String title = gpt3Util.chat(chatApiVo);
             JSONObject msg1 = analysis(title);
-            if (msg1 == null){
-                throw new CustomException("gpt error");
+            if (msg1 != null) {
+                session.setTitle(msg1.getString("content"));
             }
-            String content1 = msg1.getString("content");
-            System.out.println(content1);
-            session.setTitle(content1);
         }
         sessionService.updateById(session);
         return ResponseEntity.ok(Result.success(chatVo));

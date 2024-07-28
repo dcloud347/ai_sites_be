@@ -3,6 +3,11 @@ package com.ai.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.ai.enums.Type;
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +31,7 @@ public class Session implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
@@ -42,5 +48,7 @@ public class Session implements Serializable {
      * 会话开始时间
      */
     private LocalDateTime startTime;
-    private String type;
+
+    @EnumValue
+    private Type type;
 }

@@ -27,6 +27,6 @@ public class SessionVo {
         id = session.getId();
         title = session.getTitle();
         startTime = session.getStartTime();
-        type = session.getType();
+        type = session.getType().toString();
     }
 }

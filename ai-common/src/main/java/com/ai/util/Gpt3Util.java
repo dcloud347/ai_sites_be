@@ -1,6 +1,11 @@
 package com.ai.util;
 
 import com.ai.config.OpenAiConfig;
+import com.ai.vo.ChatApiVo;
+import com.ai.vo.ContentApiVo;
+import com.ai.vo.MessageApiVo;
+import com.ai.vo.TextContentApiVo;
+import com.google.gson.Gson;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -33,13 +38,10 @@ public class Gpt3Util {
             .baseUrl("https://api.openai.com/")
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + API_KEY)
             .build();
-    public String chat(List<String> conversationHistory, String model){
+    public String chat(ChatApiVo chatApiVo){
         // 准备JSON数据
-        String jsonData = String.format("""
-                {
-                    "model": "%s",
-                    "messages": [%s]
-                }""", model, String.join(",", conversationHistory));
+        Gson gson = new Gson();
+        String jsonData = gson.toJson(chatApiVo);
         // 创建HttpClient
         HttpClient client = HttpClient.newHttpClient();
         // 构建HttpRequest
@@ -87,10 +89,8 @@ public class Gpt3Util {
 
 
     public static void main(String[] args) {
-        ArrayList<String> list = new ArrayList<>();
-        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", "你是gpt3.5还是gpt4"));
-//        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "assistant", "我是GPT-3，尚未更新至GPT-4版本。如有其他问题，我将竭诚为您提供帮助。"));
-//        list.add(String.format("{\"role\": \"%s\", \"content\": \"%s\"}", "user", "那你有新版本了吗"));
-
+        ChatApiVo chatApiVo = new ChatApiVo().setModel("gpt-4o");
+        chatApiVo.addTextMessage("今天天气怎么样","user");
+        Gpt3Util gpt3Util = new Gpt3Util();
     }
 }

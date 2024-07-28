@@ -31,8 +31,6 @@ public interface IUserService extends IService<User> {
 
     ResponseEntity<Result<LoginVo>> registerByUsername(LoginDto loginDto);
 
-    ResponseEntity<Result<LoginDto>> generate();
-
     Result updateUserInfo(UserInfoDto userInfoDto);
 
     Result<UserInfoVo> userInfo();
