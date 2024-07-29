@@ -56,7 +56,7 @@ public class MessageController {
      */
     @GetMapping
     @LoginRequired
-    public Result<Map> list(){
+    public Result<Map<String,List<SessionVo>>> list(){
         LocalDateTime now = LocalDateTime.now();
         List<SessionVo> today = new ArrayList<>();
         List<SessionVo> yesterday = new ArrayList<>();
@@ -77,7 +77,7 @@ public class MessageController {
                 last30Days.add(vo);
             }
         }
-        HashMap<String, List> map = new HashMap<>();
+        Map<String, List<SessionVo>> map = new HashMap<>();
         map.put("today", today);
         map.put("yesterday", yesterday);
         map.put("last7Days", last7Days);

@@ -34,7 +34,6 @@ import reactor.core.publisher.Mono;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -112,7 +111,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         if (chatDto.getSessionId() == null){
             // 新建对话
             Session session = new Session();
-            session.setTitle(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).setStartTime(LocalDateTime.now()).setUserId(loginEntity.getUserId());
+            session.setTitle("new chat").setStartTime(LocalDateTime.now()).setUserId(loginEntity.getUserId());
             session.setType(chatDto.getType());
             sessionService.save(session);
             chatDto.setSessionId(session.getId());
@@ -195,14 +194,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         // 更新对话时间
         String ip = CommonUtil.getIpAddr(request);
         Session session = sessionService.getById(message1.getSessionId());
-        Mono<LocalDateTime> dateTime = this.sessionService.getTimeZone(ip);
+        Mono<LocalDateTime> dateTime = sessionService.getTimeZone(ip);
         LocalDateTime localDateTime = dateTime.block();
         session.setStartTime(localDateTime);
         // 总结标题
         if (isPastTitle(session.getTitle())){
             chatApiVo.addTextMessage("According to the content of the previous chat with me," +
                     " give me a summary of a suitable title,I just want the title, other words, symbols do not want," +
-                    " within 20 words",Role.user.toString());
+                    " within 12 words",Role.user.toString());
             // 开始总结
             String title = gpt3Util.chat(chatApiVo);
             JSONObject msg1 = analysis(title);
