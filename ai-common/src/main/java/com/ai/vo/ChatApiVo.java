@@ -13,6 +13,7 @@ import java.util.List;
 public class ChatApiVo {
     private String model;
     private List<MessageApiVo> messages = new ArrayList<>();
+    private boolean stream = false;
 
     public void addMessage(MessageApiVo messageApiVo){
         messages.add(messageApiVo);

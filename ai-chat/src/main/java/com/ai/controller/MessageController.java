@@ -15,15 +15,16 @@ import com.ai.vo.SessionVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * <p>
@@ -42,6 +43,9 @@ public class MessageController {
 
     @Resource
     private ISessionService sessionService;
+    private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+
 
     /**
      * 发起聊天
@@ -51,6 +55,31 @@ public class MessageController {
     public ResponseEntity<Result<ChatVo>> chat(@RequestBody ChatDto chatDto, HttpServletRequest request){
         return messageService.chat(chatDto, request);
     }
+
+    @PostMapping(value = "/stream-chatting")
+    @LoginRequired
+    public SseEmitter streamChatting(@RequestBody ChatDto chatDto, HttpServletRequest request) {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        this.emitters.add(emitter);
+        emitter.onCompletion(() -> this.emitters.remove(emitter));
+        emitter.onTimeout(() -> {
+            emitter.complete();
+            this.emitters.remove(emitter);
+        });
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        // 开启线程发送数据
+        executor.execute(() -> {
+            try {
+                messageService.streamChat(chatDto,request,emitter,loginEntity);
+                emitter.complete();
+                this.emitters.remove(emitter);
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        });
+        return emitter;
+    }
+
     /**
      * 查询我的所有会话记录
      */

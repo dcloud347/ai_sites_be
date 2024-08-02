@@ -29,14 +29,22 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 /**
  * <p>
@@ -91,8 +99,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                 filename.endsWith(".gif");
     }
 
-    @Override
-    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) throws CustomException {
+    private ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity) throws CustomException{
         String model;
         switch (chatDto.getMode()){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
@@ -103,7 +110,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         if(chatDto.getFileId()!=null && !vision_models.contains(model)){
             throw new CustomException(model+" have no vision capabilities!");
         }
-        LoginEntity loginEntity = LoginAspect.threadLocal.get();
         if(chatDto.getSessionId()!=null && sessionService.getById(chatDto.getSessionId()).getUserId()!=loginEntity.getUserId()){
             throw new CustomException("No access to this session!");
         }
@@ -159,14 +165,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             messages.clear();
             chatApiVo.setMessages(messages);
         }
-        // 发送消息
-        String chat = gpt3Util.chat(chatApiVo);
-        if (chat == null){
-            throw new CustomException("Network Error");
-        }
-        JSONObject msg = analysis(chat);
-        Role role = Role.valueOf(msg.getString("role"));
-        String content = msg.getString("content");
+        return chatApiVo;
+    }
+
+    private ChatVo afterChat(ChatDto chatDto,ChatApiVo chatApiVo, String respondingMessage, Role role,
+                           LoginEntity loginEntity, HttpServletRequest request) {
         // 保存聊天记录
         Message message = new Message(chatDto);
         message.setRole(Role.user);
@@ -180,9 +183,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
         // 保存gpt的回复
         ChatVo chatVo = new ChatVo();
-        chatVo.setMessage(content).setSessionId(chatDto.getSessionId()).setModel(chatDto.getMode());
-        Message message1 = new Message(content.strip(), chatVo.getSessionId());
-        message1.setModel(model);
+        chatVo.setMessage(respondingMessage).setSessionId(chatDto.getSessionId()).setModel(chatDto.getMode());
+        Message message1 = new Message(respondingMessage.strip(), chatVo.getSessionId());
+        message1.setModel(chatApiVo.getModel());
         message1.setRole(role);
         chatApiVo.addTextMessage(clear(message1.getContent()),message1.getRole().toString());
         this.save(message1);
@@ -210,6 +213,23 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             }
         }
         sessionService.updateById(session);
+        return chatVo;
+    }
+
+
+    @Override
+    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) throws CustomException {
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity);
+        // 发送消息
+        String chat = gpt3Util.chat(chatApiVo);
+        if (chat == null){
+            throw new CustomException("Network Error");
+        }
+        JSONObject msg = analysis(chat);
+        Role role = Role.valueOf(msg.getString("role"));
+        String content = msg.getString("content");
+        ChatVo chatVo = afterChat(chatDto,chatApiVo, content,role, loginEntity, request);
         return ResponseEntity.ok(Result.success(chatVo));
     }
 
@@ -229,4 +249,43 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return ResponseEntity.ok(Result.success(chatRecordVos));
     }
 
+    @Override
+    public void streamChat(ChatDto chatDto, HttpServletRequest request, SseEmitter emitter, LoginEntity loginEntity) throws CustomException {
+        ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity).setStream(true);
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest chattingRequest = gpt3Util.getChatRequest(chatApiVo);
+        StringBuilder entireContent_sb = new StringBuilder();
+        StringBuilder role_sb = new StringBuilder();
+        try{
+            HttpResponse<Stream<String>> response = client.send(chattingRequest, BodyHandlers.ofLines());
+            // 处理响应体
+            response.body().forEach(line -> {
+                if (!line.equals("data: [DONE]") && line.startsWith("data: ")) {
+                    String json = line.substring("data: ".length());
+                    JSONObject jsonObject = JSON.parseObject(json);
+                    JSONArray choices = jsonObject.getJSONArray("choices");
+                    JSONObject choice = choices.getJSONObject(0);
+                    JSONObject delta = choice.getJSONObject("delta");
+                    String content = delta.getString("content");
+                    String role_ = delta.getString("role");
+                    if(role_ !=null){
+                        role_sb.append(role_);
+                    }
+                    if(content != null){
+                        entireContent_sb.append(content);
+                        ChatVo chatVo = new ChatVo().setMessage(content).setSessionId(chatDto.getSessionId()).setModel(chatDto.getMode());
+                        try {
+                            emitter.send(SseEmitter.event().name("data").data(chatVo));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            });
+        }catch (IOException | InterruptedException e) {
+            throw new CustomException("Network Error");
+        }
+        Role role = Role.valueOf(role_sb.toString());
+        afterChat(chatDto,chatApiVo, entireContent_sb.toString(), role, loginEntity, request);
+    }
 }

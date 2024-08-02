@@ -2,9 +2,6 @@ package com.ai.util;
 
 import com.ai.config.OpenAiConfig;
 import com.ai.vo.ChatApiVo;
-import com.ai.vo.ContentApiVo;
-import com.ai.vo.MessageApiVo;
-import com.ai.vo.TextContentApiVo;
 import com.google.gson.Gson;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -21,8 +18,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author 刘晨
@@ -39,19 +34,9 @@ public class Gpt3Util {
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + API_KEY)
             .build();
     public String chat(ChatApiVo chatApiVo){
-        // 准备JSON数据
-        Gson gson = new Gson();
-        String jsonData = gson.toJson(chatApiVo);
         // 创建HttpClient
         HttpClient client = HttpClient.newHttpClient();
-        // 构建HttpRequest
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL))
-                .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer "+ API_KEY)
-                .POST(HttpRequest.BodyPublishers.ofString(jsonData, StandardCharsets.UTF_8))
-//                .timeout(Duration.ofSeconds(3))
-                .build();
+        HttpRequest request = getChatRequest(chatApiVo);
         try {
             // 发送请求并获取响应
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -60,6 +45,20 @@ public class Gpt3Util {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public HttpRequest getChatRequest(ChatApiVo chatApiVo){
+        // 准备JSON数据
+        Gson gson = new Gson();
+        String jsonData = gson.toJson(chatApiVo);
+        // 构建HttpRequest
+        return HttpRequest.newBuilder()
+                .uri(URI.create(API_URL))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer "+ API_KEY)
+                .POST(HttpRequest.BodyPublishers.ofString(jsonData, StandardCharsets.UTF_8))
+//                .timeout(Duration.ofSeconds(3))
+                .build();
     }
 
     public String uploadFile(MultipartFile file) throws IOException {
@@ -89,8 +88,12 @@ public class Gpt3Util {
 
 
     public static void main(String[] args) {
-        ChatApiVo chatApiVo = new ChatApiVo().setModel("gpt-4o");
-        chatApiVo.addTextMessage("今天天气怎么样","user");
+        ChatApiVo chatApiVo = new ChatApiVo().setModel("gpt-4o").setStream(true);
+            chatApiVo.addTextMessage("给我讲讲苏格拉底的故事","user");
         Gpt3Util gpt3Util = new Gpt3Util();
+        HttpRequest request = gpt3Util.getChatRequest(chatApiVo);
+        HttpClient client = HttpClient.newHttpClient();
+
+
     }
 }
