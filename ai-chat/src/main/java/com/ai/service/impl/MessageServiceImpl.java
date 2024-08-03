@@ -206,6 +206,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     " give me a summary of a suitable title,I just want the title, other words, symbols do not want," +
                     " within 12 words",Role.user.toString());
             // 开始总结
+            chatApiVo.setStream(false);
             String title = gpt3Util.chat(chatApiVo);
             JSONObject msg1 = analysis(title);
             if (msg1 != null) {
@@ -244,7 +245,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             List<FileVo> fileVos = new ArrayList<>();
             fileService.list(fileQueryWrapper).forEach(file -> fileVos.add(new FileVo(file)));
             chatRecordVos.add(new ChatRecordVo(message).setFiles(fileVos));
-
         });
         return ResponseEntity.ok(Result.success(chatRecordVos));
     }
