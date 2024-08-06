@@ -10,6 +10,7 @@ import com.ai.enums.RedisPrefixEnum;
 import com.ai.enums.Role;
 import com.ai.enums.Type;
 import com.ai.exceptions.CustomException;
+import com.ai.feign.UserService;
 import com.ai.mapper.MessageMapper;
 import com.ai.model.LoginEntity;
 import com.ai.service.IFileService;
@@ -67,6 +68,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Resource
     private IFileService fileService;
 
+    @Resource
+    private UserService userService;
     private final List<String> vision_models = List.of(new String[]{"gpt-4-turbo", "gpt-4o"});
 
     // 判断标题是否修改重新总结
@@ -87,6 +90,16 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         JSONArray choices = jsonObject.getJSONArray("choices");
         JSONObject choice = choices.getJSONObject(0);
         return choice.getJSONObject("message");
+    }
+
+    // 解析花费的total_tokens
+    private Integer getTokens(String text){
+        JSONObject jsonObject = JSON.parseObject(text);
+        if (jsonObject.getJSONObject("error") != null){
+            throw new CustomException("GPT Error.");
+        }
+        JSONObject usage = jsonObject.getJSONObject("usage");
+        return usage.getInteger("total_tokens");
     }
 
     private boolean isImage(String filename){
@@ -194,6 +207,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             String key = RedisPrefixEnum.ROBOT_SESSION.getPrefix() + loginEntity.getUserId();
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
         }
+        // 开始扣费
+
+
         // 更新对话时间
         String ip = CommonUtil.getIpAddr(request);
         Session session = sessionService.getById(message1.getSessionId());
@@ -222,15 +238,26 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) throws CustomException {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity);
+        // 先检查余额是否不足
+        Integer surplus = userService.getTokens(loginEntity.getUserId());
+        if (surplus <= 0){
+            throw new CustomException("Insufficient Balance");
+        }
         // 发送消息
         String chat = gpt3Util.chat(chatApiVo);
         if (chat == null){
             throw new CustomException("Network Error");
         }
         JSONObject msg = analysis(chat);
+
         Role role = Role.valueOf(msg.getString("role"));
         String content = msg.getString("content");
         ChatVo chatVo = afterChat(chatDto,chatApiVo, content,role, loginEntity, request);
+        // 开始扣费
+        Integer tokens = getTokens(chat);
+        System.out.println(chat);
+        userService.setTokens(tokens, loginEntity.getUserId());
+        chatVo.setSurplus(userService.getTokens(loginEntity.getUserId()));
         return ResponseEntity.ok(Result.success(chatVo));
     }
 

@@ -19,4 +19,5 @@ public class ChatVo {
     private Long sessionId;
 
     private String model;
+    private Integer surplus;
 }

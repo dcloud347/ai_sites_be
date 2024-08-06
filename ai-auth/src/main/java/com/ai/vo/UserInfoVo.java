@@ -14,9 +14,10 @@ import lombok.NoArgsConstructor;
 public class UserInfoVo {
     private String avatar_url;
     private String nick;
-
+    private Integer tokens;
     public UserInfoVo(User user) {
         avatar_url = user.getAvatar_url();
         nick = user.getNick();
+        tokens = user.getTokens();
     }
 }

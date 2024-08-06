@@ -3,6 +3,7 @@ package com.ai.controller;
 import com.ai.annotation.LoginRequired;
 import com.ai.aspect.LoginAspect;
 import com.ai.dto.LoginDto;
+import com.ai.entity.User;
 import com.ai.feign.EmailService;
 import com.ai.model.LoginEntity;
 import com.ai.service.IUserService;
@@ -110,4 +111,22 @@ public class UserController {
         return userService.login(loginDto, request);
     }
 
+    /**
+     * 查询余额
+     */
+    @GetMapping("tokens/{id}")
+    public Integer tokens(@PathVariable Integer id){
+        User user = userService.getById(id);
+        return user.getTokens();
+    }
+
+    /**
+     * 扣费
+     */
+    @GetMapping("setTokens/{id}")
+    public void decrease(@RequestParam Integer tokens, @PathVariable Integer id){
+        User user = userService.getById(id);
+        user.setTokens(user.getTokens() - tokens);
+        userService.updateById(user);
+    }
 }
