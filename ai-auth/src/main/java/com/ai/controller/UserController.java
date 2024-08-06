@@ -108,7 +108,7 @@ public class UserController {
      */
     @PostMapping("speaker-login")
     public ResponseEntity<Result<LoginVo>> speakerLogin(@RequestBody LoginDto loginDto,  HttpServletRequest request){
-        return userService.login(loginDto, request);
+        return userService.speakerLogin(loginDto, request);
     }
 
     /**

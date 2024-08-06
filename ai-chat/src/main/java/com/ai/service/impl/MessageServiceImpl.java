@@ -237,12 +237,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Override
     public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) throws CustomException {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity);
         // 先检查余额是否不足
         Integer surplus = userService.getTokens(loginEntity.getUserId());
         if (surplus <= 0){
             throw new CustomException("Insufficient Balance");
         }
+        ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity);
         // 发送消息
         String chat = gpt3Util.chat(chatApiVo);
         if (chat == null){
