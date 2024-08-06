@@ -251,7 +251,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         ChatVo chatVo = afterChat(chatDto,chatApiVo, content,role, loginEntity, request);
         // 开始扣费
         Integer tokens = getTokens(chat);
-        System.out.println(chat);
         userService.setTokens(tokens, loginEntity.getUserId());
         chatVo.setSurplus(userService.getTokens(loginEntity.getUserId()));
         return ResponseEntity.ok(Result.success(chatVo));
