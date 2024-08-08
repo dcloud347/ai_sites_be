@@ -207,9 +207,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             String key = RedisPrefixEnum.ROBOT_SESSION.getPrefix() + loginEntity.getUserId();
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
         }
-        // 开始扣费
-
-
         // 更新对话时间
         String ip = CommonUtil.getIpAddr(request);
         Session session = sessionService.getById(message1.getSessionId());
@@ -218,9 +215,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         session.setStartTime(localDateTime);
         // 总结标题
         if (isPastTitle(session.getTitle())){
-            chatApiVo.addTextMessage("According to the content of the previous chat with me," +
-                    " give me a summary of a suitable title,I just want the title, other words, symbols do not want," +
-                    " within 12 words",Role.user.toString());
+            chatApiVo.addTextMessage("Based on our dialogue, give me a short headline, pick the one you think " +
+                    "is most appropriate, and your answer should only provide me with the headline.",Role.user.toString());
             // 开始总结
             chatApiVo.setStream(false);
             String title = gpt3Util.chat(chatApiVo);
@@ -237,12 +233,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     @Override
     public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) throws CustomException {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity);
         // 先检查余额是否不足
         Integer surplus = userService.getTokens(loginEntity.getUserId());
         if (surplus <= 0){
             throw new CustomException("Insufficient Balance");
         }
+        ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity);
         // 发送消息
         String chat = gpt3Util.chat(chatApiVo);
         if (chat == null){
@@ -255,7 +251,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         ChatVo chatVo = afterChat(chatDto,chatApiVo, content,role, loginEntity, request);
         // 开始扣费
         Integer tokens = getTokens(chat);
-        System.out.println(chat);
         userService.setTokens(tokens, loginEntity.getUserId());
         chatVo.setSurplus(userService.getTokens(loginEntity.getUserId()));
         return ResponseEntity.ok(Result.success(chatVo));
