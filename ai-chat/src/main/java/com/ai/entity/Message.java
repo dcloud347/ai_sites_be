@@ -2,6 +2,7 @@ package com.ai.entity;
 
 import com.ai.dto.ChatDto;
 import com.ai.enums.Role;
+import com.ai.enums.Type;
 import com.ai.vo.ChatVo;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -42,7 +43,7 @@ public class Message implements Serializable {
 
 
     /**
-     * 角色，gpt或者用户
+     * 角色，system, user 或 assistant
      */
     @EnumValue
     private Role role;
@@ -56,6 +57,12 @@ public class Message implements Serializable {
      * 模型
      */
     private String model;
+
+    /**
+     * 类型
+     */
+    @EnumValue
+    private Type type;
 
     /**
      * 创建时间
