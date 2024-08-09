@@ -136,7 +136,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             chatDto.setSessionId(session.getId());
             if(Type.ROBOT.equals(loginEntity.getType())){
                 Message message = new Message();
-                message.setRole(Role.system).setSessionId(session.getId()).setContent("Please reply in a short response").setCreateTime(LocalDateTime.now());
+                message.setRole(Role.system).setSessionId(session.getId()).setContent("Please reply in a short response").setCreateTime(LocalDateTime.now()).setType(loginEntity.getType());
                 this.save(message);
             }
         }
