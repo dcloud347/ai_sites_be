@@ -31,17 +31,14 @@ public class SessionController {
      */
     @PostMapping
     @LoginRequired
-    public Result create(@RequestBody(required = false) Session session, HttpServletRequest request){
-        if (session == null){
-            session = new Session();
-        }
+    public Result<Session> create(){
+        Session session = new Session();
         session.setTitle("new chat");
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        session.setType(loginEntity.getType());
         session.setUserId(loginEntity.getUserId());
         sessionService.save(session);
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("sessionId", session.getId());
-        return Result.success(map);
+        return Result.success(session);
     }
 
     /**
