@@ -35,7 +35,7 @@ public class Result<T> implements Serializable {
      * 无参响应成功
      */
     public static <T> Result<T> success() {
-        return new Result<T>();
+        return new Result<T>(ResultCode.SUCCESS.getCode(),"success",null);
     }
 
     /**
@@ -46,7 +46,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> success(T data) {
-        return new Result<T>(data);
+        return new Result<T>(ResultCode.SUCCESS.getCode(),"success",data);
     }
 
     /**
@@ -57,7 +57,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> success(String msg) {
-        return new Result<T>(msg);
+        return new Result<T>(ResultCode.SUCCESS.getCode(),msg,null);
     }
 
     /**
@@ -69,7 +69,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> success(String msg, T data) {
-        return new Result<T>(msg, data);
+        return new Result<T>(ResultCode.SUCCESS.getCode(),msg,data);
     }
 
     /**
@@ -79,7 +79,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error() {
-        return new Result<T>(ResultCode.BAD_REQUEST.getCode());
+        return new Result<T>(ResultCode.BAD_REQUEST.getCode(), "error",null);
     }
 
     /**
@@ -89,7 +89,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error(String msg) {
-        return new Result<T>(ResultCode.BAD_REQUEST.getCode(), msg);
+        return new Result<T>(ResultCode.BAD_REQUEST.getCode(), msg,null);
     }
 
     /**
@@ -101,7 +101,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error(int code, String msg) {
-        return new Result<T>(code, msg);
+        return new Result<T>(code, msg,null);
     }
 
     /**
@@ -114,23 +114,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error(ResultCode resultCode) {
-        return new Result<T>(resultCode.getCode());
-    }
-
-    /**
-     * 成功构造器,无返回数据
-     */
-    private Result() {
-        this(ResultCode.SUCCESS.getCode());
-    }
-
-    /**
-     * 成功构造器,自定义返回数据
-     *
-     * @param data 返回数据
-     */
-    private Result(T data) {
-        this(ResultCode.SUCCESS.getCode(), data);
+        return new Result<T>(resultCode.getCode(), "error",null);
     }
 
     /**
