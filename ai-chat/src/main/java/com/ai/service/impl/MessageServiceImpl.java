@@ -114,11 +114,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     private ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity) throws CustomException{
         String model;
-        switch (chatDto.getMode()){
+        switch (chatDto.getModel()){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
             case "gpt4" -> model = "gpt-4-turbo";
             case "gpt-4o" -> model = "gpt-4o";
-            default -> throw new CustomException("Unrecognised models " + chatDto.getMode());
+            default -> throw new CustomException("Unrecognised models " + chatDto.getModel());
         }
         if(chatDto.getFileId()!=null && !vision_models.contains(model)){
             throw new CustomException(model+" have no vision capabilities!");
@@ -131,12 +131,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             // 新建对话
             Session session = new Session();
             session.setTitle("new chat").setStartTime(LocalDateTime.now()).setUserId(loginEntity.getUserId());
-            session.setType(chatDto.getType());
+            session.setType(loginEntity.getType());
             sessionService.save(session);
             chatDto.setSessionId(session.getId());
-            if(Type.ROBOT.equals(chatDto.getType())){
+            if(Type.ROBOT.equals(loginEntity.getType())){
                 Message message = new Message();
-                message.setRole(Role.system).setSessionId(session.getId()).setContent("Please reply in a short response").setCreateTime(LocalDateTime.now());
+                message.setRole(Role.system).setSessionId(session.getId()).setContent("Please reply in a short response").setCreateTime(LocalDateTime.now()).setType(loginEntity.getType());
                 this.save(message);
             }
         }
@@ -186,6 +186,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         // 保存聊天记录
         Message message = new Message(chatDto);
         message.setRole(Role.user);
+        message.setType(loginEntity.getType());
         this.save(message);
         if(chatDto.getFileId()!=null){
             chatDto.getFileId().forEach(fileId -> {
@@ -196,13 +197,13 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
         // 保存gpt的回复
         ChatVo chatVo = new ChatVo();
-        chatVo.setMessage(respondingMessage).setSessionId(chatDto.getSessionId()).setModel(chatDto.getMode());
+        chatVo.setMessage(respondingMessage).setSessionId(chatDto.getSessionId()).setModel(chatDto.getModel());
         Message message1 = new Message(respondingMessage.strip(), chatVo.getSessionId());
         message1.setModel(chatApiVo.getModel());
         message1.setRole(role);
-        chatApiVo.addTextMessage(clear(message1.getContent()),message1.getRole().toString());
+        message1.setType(loginEntity.getType());
         this.save(message1);
-        if(Type.ROBOT.equals(chatDto.getType())){
+        if(Type.ROBOT.equals(loginEntity.getType())){
             // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
             String key = RedisPrefixEnum.ROBOT_SESSION.getPrefix() + loginEntity.getUserId();
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
@@ -213,6 +214,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         Mono<LocalDateTime> dateTime = sessionService.getTimeZone(ip);
         LocalDateTime localDateTime = dateTime.block();
         session.setStartTime(localDateTime);
+        // 将回答加入聊天记录
+        chatApiVo.addTextMessage(clear(message1.getContent()),message1.getRole().toString());
         // 总结标题
         if (isPastTitle(session.getTitle())){
             chatApiVo.addTextMessage("Based on our dialogue, give me a short headline, pick the one you think " +
@@ -295,7 +298,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     }
                     if(content != null){
                         entireContent_sb.append(content);
-                        ChatVo chatVo = new ChatVo().setMessage(content).setSessionId(chatDto.getSessionId()).setModel(chatDto.getMode());
+                        ChatVo chatVo = new ChatVo().setMessage(content).setSessionId(chatDto.getSessionId()).setModel(chatDto.getModel());
                         try {
                             emitter.send(SseEmitter.event().name("data").data(chatVo));
                         } catch (IOException e) {

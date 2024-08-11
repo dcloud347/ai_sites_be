@@ -17,6 +17,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import com.ai.enums.Type;
 
 /**
  * @author 刘晨
@@ -50,7 +51,7 @@ public class LoginAspect {
         if(user_token_user_id != null){
             LoginEntity loginEntity = new LoginEntity();
             loginEntity.setUserId(Integer.parseInt(user_token_user_id));
-            loginEntity.setType("user");
+            loginEntity.setType(Type.WEBAPP);
             //通过attribute传递用户信息
             //request.setAttribute("loginUser",loginUser);
             //通过threadLocal传递用户登录信息
@@ -60,7 +61,7 @@ public class LoginAspect {
         }else if(speaker_token_user_id !=null){
             LoginEntity loginEntity = new LoginEntity();
             loginEntity.setUserId(Integer.parseInt(speaker_token_user_id));
-            loginEntity.setType("speaker");
+            loginEntity.setType(Type.ROBOT);
             //通过attribute传递用户信息
             //request.setAttribute("loginUser",loginUser);
             //通过threadLocal传递用户登录信息

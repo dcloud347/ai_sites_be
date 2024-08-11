@@ -1,6 +1,5 @@
 package com.ai.dto;
 
-import com.ai.enums.Type;
 import lombok.Data;
 
 import java.util.List;
@@ -16,7 +15,6 @@ public class ChatDto {
      * 会话id
      */
     private Long sessionId;
-    private Type type;
 
     /**
      * 消息内容
@@ -26,7 +24,7 @@ public class ChatDto {
     /**
      * 模型名称
      */
-    private String mode;
+    private String model;
 
     private List<String> fileId;
 }

@@ -7,12 +7,12 @@ spring:
     nacos:
       discovery:
         namespace: ${env}
-        server-addr: http://4.234.8.238:8848
+        server-addr: https://config.acumenbot.ai
         username: nacos
         password: A1dMlna_iL_l28@
       config:
         namespace: ${env}
-        server-addr: http://4.234.8.238:8848
+        server-addr: https://config.acumenbot.ai
         username: nacos
         password: A1dMlna_iL_l28@
     compatibility-verifier:

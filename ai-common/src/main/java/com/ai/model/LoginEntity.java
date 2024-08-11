@@ -1,7 +1,7 @@
 package com.ai.model;
 
 import lombok.Data;
-
+import com.ai.enums.Type;
 /**
  * @author 刘晨
  */
@@ -10,6 +10,6 @@ public class LoginEntity {
 
     private int userId;
 
-    private String type;
+    private Type type;
 
 }
