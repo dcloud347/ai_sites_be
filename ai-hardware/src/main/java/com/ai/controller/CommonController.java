@@ -26,7 +26,6 @@ public class CommonController {
     @GetMapping("/time")
     public Mono<String> getTime(HttpServletRequest request) {
         String ip = CommonUtil.getIpAddr(request);
-        System.out.println(ip);
         return ipApiService.getTimeZone(ip)
                 .map(timeZone -> {
                     ZonedDateTime now = ZonedDateTime.now(java.time.ZoneId.of(timeZone));

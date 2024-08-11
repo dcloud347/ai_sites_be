@@ -8,13 +8,13 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: http://4.234.8.238:8848
+        server-addr: https://config.acumenbot.ai
         namespace: ${env}
         username: nacos
         password: A1dMlna_iL_l28@
       #        enabled: false
       config:
-        server-addr: http://4.234.8.238:8848
+        server-addr: https://config.acumenbot.ai
         username: nacos
         password: A1dMlna_iL_l28@
         extension-configs[0]:
