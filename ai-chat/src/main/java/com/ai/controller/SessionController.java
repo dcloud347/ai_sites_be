@@ -7,6 +7,7 @@ import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
 import com.ai.service.ISessionService;
 import com.ai.util.Result;
+import com.ai.util.ResultCode;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
@@ -31,17 +32,22 @@ public class SessionController {
      */
     @PostMapping
     @LoginRequired
-    public Result create(@RequestBody(required = false) Session session, HttpServletRequest request){
+    public ResponseEntity<Result> create(@RequestBody(required = false) Session session, HttpServletRequest request){
         if (session == null){
             session = new Session();
         }
-        session.setTitle("new chat");
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        // 判断该用户之前是不是有new chat记录
+        List<Session> list = sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).eq("title", "new chat"));
+        if (list == null || list.size() != 0){
+            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Repetitive conversation"));
+        }
+        session.setTitle("new chat");
         session.setUserId(loginEntity.getUserId());
         sessionService.save(session);
         HashMap<String, Object> map = new HashMap<>();
         map.put("sessionId", session.getId());
-        return Result.success(map);
+        return ResponseEntity.ok().body(Result.success(map));
     }
 
     /**
