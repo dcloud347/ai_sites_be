@@ -44,7 +44,7 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
                 .uri("/json/{ip}", ip)
                 .retrieve()
                 .bodyToMono(String.class)
-                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)))
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)))
                 .map(this::extractTimeZoneFromResponse)
                 .onErrorResume(throwable -> {
                     // Handle the error here
