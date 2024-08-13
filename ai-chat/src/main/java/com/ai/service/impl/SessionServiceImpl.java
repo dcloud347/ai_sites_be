@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
@@ -17,6 +18,7 @@ import java.util.TimeZone;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ai.exceptions.CustomException;
+import reactor.util.retry.Retry;
 
 /**
  * <p>
@@ -42,7 +44,12 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
                 .uri("/json/{ip}", ip)
                 .retrieve()
                 .bodyToMono(String.class)
-                .map(this::extractTimeZoneFromResponse);
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)))
+                .map(this::extractTimeZoneFromResponse)
+                .onErrorResume(throwable -> {
+                    // Handle the error here
+                    return Mono.empty();
+                });
     }
 
     private LocalDateTime extractTimeZoneFromResponse(String response) throws CustomException{

@@ -215,6 +215,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         String ip = CommonUtil.getIpAddr(request);
         Session session = sessionService.getById(message1.getSessionId());
         Mono<LocalDateTime> dateTime = sessionService.getTimeZone(ip);
+        if(dateTime.blockOptional().isEmpty()) {
+            throw new CustomException("Local Time Parse Error");
+        }
         LocalDateTime localDateTime = dateTime.block();
         session.setStartTime(localDateTime);
         // 将回答加入聊天记录
