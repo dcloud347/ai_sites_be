@@ -114,6 +114,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     private ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity) throws CustomException{
         String model;
+        if(chatDto.getModel()==null){
+            throw new CustomException("No specified model!");
+        }
         switch (chatDto.getModel()){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
             case "gpt4" -> model = "gpt-4-turbo";
