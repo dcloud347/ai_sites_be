@@ -31,7 +31,7 @@ public class ManagerServiceImpl extends ServiceImpl<ManagerMapper, Manager> impl
             return Result.error("Username or password incorrect.");
         }
         String accessToken = JwtUtil.generateJwtToken(one.getId(),LoginType.ADMIN, JwtType.access_token);
-        String refreshToken = JwtUtil.generateJwtToken(one.getId(),LoginType.ADMIN, JwtType.access_token);
+        String refreshToken = JwtUtil.generateJwtToken(one.getId(),LoginType.ADMIN, JwtType.refresh_token);
         LoginVo loginVo = new LoginVo(accessToken,refreshToken,one.getRole());
         return Result.success(loginVo);
     }

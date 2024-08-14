@@ -83,7 +83,7 @@ public class JwtUtil {
      * @return payload
      */
     public static Payload getPayloadFromJwt(String jwt) throws ServerException {
-        if(jwt==null){
+        if(jwt==null || jwt.isEmpty()){
             throw new ServerException("Token not Provided");
         }
         Claims claims;
