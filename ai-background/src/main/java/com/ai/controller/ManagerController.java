@@ -1,5 +1,6 @@
 package com.ai.controller;
 
+import com.ai.annotation.RoleRequired;
 import com.ai.dto.LoginDto;
 import com.ai.dto.RefreshTokenDto;
 import com.ai.entity.Manager;
@@ -38,6 +39,7 @@ public class ManagerController {
     /**
      * 添加管理员账号
      */
+    @RoleRequired({RoleRequired.RoleEnum.superAdmin})
     @PostMapping
     public Result create(@RequestBody Manager manager){
         return managerService.create(manager);
