@@ -1,6 +1,7 @@
 package com.ai.service;
 
 import com.ai.dto.LoginDto;
+import com.ai.dto.RefreshTokenDto;
 import com.ai.entity.Manager;
 import com.ai.util.Result;
 import com.ai.vo.LoginVo;
@@ -19,4 +20,6 @@ public interface IManagerService extends IService<Manager> {
     Result<LoginVo> login(LoginDto loginDto);
 
     Result create(Manager manager);
+
+    Result<LoginVo> refreshToken(RefreshTokenDto refreshTokenDto);
 }

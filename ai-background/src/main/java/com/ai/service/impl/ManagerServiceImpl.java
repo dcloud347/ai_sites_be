@@ -1,10 +1,14 @@
 package com.ai.service.impl;
 
 import com.ai.dto.LoginDto;
+import com.ai.dto.RefreshTokenDto;
 import com.ai.entity.Manager;
 import com.ai.enums.JwtType;
 import com.ai.enums.LoginType;
+import com.ai.exceptions.CustomException;
+import com.ai.exceptions.ServerException;
 import com.ai.mapper.ManagerMapper;
+import com.ai.model.Payload;
 import com.ai.service.IManagerService;
 import com.ai.util.JwtUtil;
 import com.ai.util.Result;
@@ -44,5 +48,25 @@ public class ManagerServiceImpl extends ServiceImpl<ManagerMapper, Manager> impl
         }
         this.save(manager);
         return Result.success();
+    }
+
+    @Override
+    public Result<LoginVo> refreshToken(RefreshTokenDto refreshTokenDto) {
+        Payload payload;
+        try{
+            payload = JwtUtil.getPayloadFromJwt(refreshTokenDto.getRefreshToken());
+        }catch (ServerException e){
+            throw new CustomException(e.getMessage());
+        }
+        if(!payload.getJwtType().equals(JwtType.refresh_token)){
+            throw new CustomException("Please use refresh token to refresh!");
+        }
+        if(!payload.getLoginType().equals(LoginType.ADMIN)){
+            throw new CustomException("Permission Denied");
+        }
+        String access_token = JwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.access_token);
+        String refreshToken = JwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.refresh_token);
+        Manager manager = this.getById(payload.getAccountId());
+        return Result.success(new LoginVo(access_token, refreshToken,manager.getRole()));
     }
 }

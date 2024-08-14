@@ -1,6 +1,7 @@
 package com.ai.controller;
 
 import com.ai.dto.LoginDto;
+import com.ai.dto.RefreshTokenDto;
 import com.ai.entity.Manager;
 import com.ai.service.IManagerService;
 import com.ai.util.Result;
@@ -40,5 +41,10 @@ public class ManagerController {
     @PostMapping
     public Result create(@RequestBody Manager manager){
         return managerService.create(manager);
+    }
+
+    @PostMapping("refresh-token")
+    public Result<LoginVo> refreshToken(@RequestBody RefreshTokenDto refreshTokenDto){
+        return managerService.refreshToken(refreshTokenDto);
     }
 }
