@@ -3,6 +3,7 @@ package com.ai.controller;
 import com.ai.annotation.LoginRequired;
 import com.ai.aspect.LoginAspect;
 import com.ai.dto.LoginDto;
+import com.ai.dto.RefreshTokenDto;
 import com.ai.entity.User;
 import com.ai.feign.EmailService;
 import com.ai.model.LoginEntity;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * 用户表 前端控制器
  * </p>
  *
- * @author 
+ * @author 潘越
  * @since 2024-03-12
 
  */
@@ -67,14 +70,6 @@ public class UserController {
     }
 
     /**
-     * 账号密码注册
-     */
-    @PostMapping("registerByUsername")
-    public ResponseEntity<Result<LoginVo>> registerByUsername(@RequestBody LoginDto loginDto){
-        return userService.registerByUsername(loginDto);
-    }
-
-    /**
      * google 登录/注册
      */
     @PostMapping(value = "/googleLogin")
@@ -94,17 +89,7 @@ public class UserController {
     }
 
     /**
-     *  登出账号
-     */
-
-    @PostMapping("logout")
-    @LoginRequired
-    public Result<String> logout(@RequestHeader("Token") String token){
-        return userService.logout(token);
-    }
-
-    /**
-     * 邮箱-密码登录
+     * 音响邮箱-密码登录
      */
     @PostMapping("speaker-login")
     public ResponseEntity<Result<LoginVo>> speakerLogin(@RequestBody LoginDto loginDto,  HttpServletRequest request){
@@ -112,21 +97,36 @@ public class UserController {
     }
 
     /**
+     * 刷新Token
+     */
+    @PostMapping("refresh-token")
+    public ResponseEntity<Result<LoginVo>> refreshToken(@RequestBody RefreshTokenDto refreshTokenDto, HttpServletRequest request){
+        return userService.refreshToken(refreshTokenDto,request);
+    }
+
+    /**
      * 查询余额
      */
-    @GetMapping("tokens/{id}")
-    public Integer tokens(@PathVariable Integer id){
-        User user = userService.getById(id);
-        return user.getTokens();
+    @LoginRequired
+    @GetMapping("tokens")
+    public Result<Map<String, Integer>> tokens(){
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        User user = userService.getById(loginEntity.getUserId());
+        Map<String, Integer> result = new HashMap<>();
+        result.put("tokens",user.getTokens());
+        return Result.success(result);
     }
 
     /**
      * 扣费
      */
-    @GetMapping("setTokens/{id}")
-    public void decrease(@RequestParam Integer tokens, @PathVariable Integer id){
-        User user = userService.getById(id);
+    @LoginRequired
+    @GetMapping("setTokens")
+    public Result decrease(@RequestParam Integer tokens){
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        User user = userService.getById(loginEntity.getUserId());
         user.setTokens(user.getTokens() - tokens);
         userService.updateById(user);
+        return Result.success();
     }
 }

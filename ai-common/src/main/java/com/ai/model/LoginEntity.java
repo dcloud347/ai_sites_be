@@ -1,7 +1,8 @@
 package com.ai.model;
 
-import lombok.Data;
+import com.ai.enums.LoginType;
 import com.ai.enums.Type;
+import lombok.Data;
 /**
  * @author 刘晨
  */
@@ -10,6 +11,7 @@ public class LoginEntity {
 
     private int userId;
 
-    private Type type;
+    private LoginType loginType;
 
+    private Type type;
 }

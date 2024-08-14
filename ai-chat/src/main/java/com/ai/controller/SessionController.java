@@ -39,11 +39,12 @@ public class SessionController {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         // 判断该用户之前是不是有new chat记录
         List<Session> list = sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).eq("title", "new chat"));
-        if (list == null || list.size() != 0){
+        if (list == null || !list.isEmpty()){
             return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Repetitive conversation"));
         }
         session.setTitle("new chat");
         session.setUserId(loginEntity.getUserId());
+        session.setType(loginEntity.getType());
         sessionService.save(session);
         HashMap<String, Object> map = new HashMap<>();
         map.put("sessionId", session.getId());

@@ -1,23 +1,24 @@
 package com.ai.aspect;
 
-import com.ai.enums.RedisPrefixEnum;
+import com.ai.enums.LoginType;
+import com.ai.enums.Type;
+import com.ai.exceptions.ServerException;
 import com.ai.model.LoginEntity;
+import com.ai.model.Payload;
 import com.ai.util.CommonUtil;
+import com.ai.util.JwtUtil;
 import com.ai.util.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import com.ai.enums.Type;
 
 /**
  * @author 刘晨
@@ -27,8 +28,6 @@ import com.ai.enums.Type;
 public class LoginAspect {
     public static ThreadLocal<LoginEntity> threadLocal = new ThreadLocal<>();
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
     @Pointcut("@annotation(com.ai.annotation.LoginRequired)")
     public void loginRequired() {
         // 定义切点
@@ -39,39 +38,31 @@ public class LoginAspect {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
         HttpServletResponse response = attributes.getResponse();
-
-        String accessToken = request.getHeader("token");
-        if(accessToken == null) {
+        String accessToken = request.getHeader("Authorization");
+        Payload payload;
+        try{
+            payload = JwtUtil.getPayloadFromJwt(accessToken);
+        }catch (ServerException e){
             response.setStatus(Result.error().getCode());
-            CommonUtil.sendJsonMessage(response, Result.error("未登录"));
+            CommonUtil.sendJsonMessage(response, Result.error(e.getMessage()));
             return false;
         }
-        String user_token_user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.USER_TOKEN.getPrefix() + accessToken);
-        String speaker_token_user_id = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.ROBOT_TOKEN.getPrefix() + accessToken);
-        if(user_token_user_id != null){
-            LoginEntity loginEntity = new LoginEntity();
-            loginEntity.setUserId(Integer.parseInt(user_token_user_id));
-            loginEntity.setType(Type.WEBAPP);
-            //通过attribute传递用户信息
-            //request.setAttribute("loginUser",loginUser);
-            //通过threadLocal传递用户登录信息
-            threadLocal.set(loginEntity);
-            // 如果已经登录，则继续执行方法
-            return joinPoint.proceed();
-        }else if(speaker_token_user_id !=null){
-            LoginEntity loginEntity = new LoginEntity();
-            loginEntity.setUserId(Integer.parseInt(speaker_token_user_id));
-            loginEntity.setType(Type.ROBOT);
-            //通过attribute传递用户信息
-            //request.setAttribute("loginUser",loginUser);
-            //通过threadLocal传递用户登录信息
-            threadLocal.set(loginEntity);
-            // 如果已经登录，则继续执行方法
-            return joinPoint.proceed();
+        if(!payload.getLoginType().equals(LoginType.USER) && !payload.getLoginType().equals(LoginType.ROBOT)){
+            response.setStatus(Result.error().getCode());
+            CommonUtil.sendJsonMessage(response, Result.error("Permission Denied"));
+            return false;
         }
-        response.setStatus(Result.error().getCode());
-        CommonUtil.sendJsonMessage(response, Result.error("未登录"));
-        return false;
+        LoginEntity loginEntity = new LoginEntity();
+        loginEntity.setUserId(payload.getAccountId());
+        loginEntity.setLoginType(payload.getLoginType());
+        if(payload.getLoginType().equals(LoginType.USER)){
+            loginEntity.setType(Type.WEBAPP);
+        }else{
+            loginEntity.setType(Type.ROBOT);
+        }
+        threadLocal.set(loginEntity);
+        // 如果已经登录，则继续执行方法
+        return joinPoint.proceed();
     }
 
     @After("loginRequired()")

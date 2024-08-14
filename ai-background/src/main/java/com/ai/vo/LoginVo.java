@@ -16,6 +16,7 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor
 @Accessors(chain = true)
 public class LoginVo {
-    private String token;
+    private String accessToken;
+    private String refreshToken;
     private String role;
 }

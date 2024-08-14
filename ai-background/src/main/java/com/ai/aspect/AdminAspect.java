@@ -4,10 +4,13 @@ package com.ai.aspect;
 import com.ai.annotation.RoleRequired;
 import com.ai.entity.AdminEntity;
 import com.ai.entity.Manager;
-import com.ai.enums.RedisPrefixEnum;
+import com.ai.enums.LoginType;
+import com.ai.exceptions.ServerException;
+import com.ai.model.Payload;
 import com.ai.service.IManagerService;
 import com.ai.util.CommonUtil;
 
+import com.ai.util.JwtUtil;
 import com.ai.util.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.After;
@@ -15,7 +18,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -24,7 +26,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -33,8 +34,6 @@ import java.util.Arrays;
 @Aspect
 @Component
 public class AdminAspect {
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private IManagerService managerService;
@@ -59,28 +58,32 @@ public class AdminAspect {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
         HttpServletResponse response = attributes.getResponse();
-        String accessToken = request.getHeader("token");
-        if(accessToken == null) {
-            CommonUtil.sendJsonMessage(response, Result.error("未登录"));
+        String accessToken = request.getHeader("Authorization");
+        Payload payload;
+        try{
+            payload = JwtUtil.getPayloadFromJwt(accessToken);
+        }catch (ServerException e){
+            response.setStatus(Result.error().getCode());
+            CommonUtil.sendJsonMessage(response, Result.error(e.getMessage()));
+            return false;
+        }
+        if(!payload.getLoginType().equals(LoginType.ADMIN)){
+            response.setStatus(Result.error().getCode());
+            CommonUtil.sendJsonMessage(response, Result.error("Permission Denied"));
+            return false;
+        }
+        AdminEntity adminEntity = new AdminEntity();
+        adminEntity.setId(payload.getAccountId());
+        // 校验权限
+        Manager manager = managerService.getById(payload.getAccountId());
+        if (!Arrays.toString(roleEnums).contains(manager.getRole())){
+            CommonUtil.sendJsonMessage(response, Result.error("Permission Denied"));
             return null;
         }
-        String adminId = stringRedisTemplate.opsForValue().get(RedisPrefixEnum.ADMIN_TOKEN.getPrefix() + accessToken);
-        if(adminId != null){
-            AdminEntity adminEntity = new AdminEntity();
-            adminEntity.setId(Integer.valueOf((adminId)));
-            // 校验权限
-            Manager manager = managerService.getById(adminId);
-            if (!Arrays.toString(roleEnums).contains(manager.getRole())){
-                CommonUtil.sendJsonMessage(response, Result.error("权限不足"));
-                return null;
-            }
-            //通过threadLocal传递用户登录信息
-            threadLocal.set(adminEntity);
-            // 如果已经登录，则继续执行方法
-            return joinPoint.proceed();
-        }
-        CommonUtil.sendJsonMessage(response, Result.error("未登录"));
-        return null;
+        //通过threadLocal传递用户登录信息
+        threadLocal.set(adminEntity);
+        // 如果已经登录，则继续执行方法
+        return joinPoint.proceed();
     }
 
     @After("adminRequired()")

@@ -1,13 +1,14 @@
 package com.ai.util;
 
+import com.ai.enums.JwtType;
+import com.ai.enums.LoginType;
+import com.ai.exceptions.ServerException;
+import com.ai.model.Payload;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 /**
@@ -19,38 +20,43 @@ public class JwtUtil {
 
     //私钥 / 生成签名的时候使用的秘钥secret，一般可以从本地配置文件中读取，切记这个秘钥不能外露，只在服务端使用，在任何场景都不应该流露出去。
     // 一旦客户端得知这个secret, 那就意味着客户端是可以自我签发jwt了。
-    private final static String secret = "secretKey";
+    private final static String secret = "55t%Rn#H6$GzeeVQu!j!NG7@1RPL#cM#S9OI#3#RV[jhkho4EO0QZtIo9K#!ABtuLAj@()wwap%fIc#!2i2@!l#PZax!Mv1[ZeXD#y0y9QCR0#U5_BQahDt1";
 
-    // 过期时间（单位秒）/ 20天
-    private final static Long access_token_expiration = 7200L * 12 * 20;
+    // 过期时间（单位秒）/ 12小时
+    private final static Long access_token_expiration = 3600L * 6;
+
+    private final static Long refresh_token_expiration = 3600L * 24 * 30;
 
     //jwt签发者
-    private final static String jwt_iss = "spzhang";
+    private final static String jwt_iss = "api.acumenbot.ai";
 
     //jwt所有人
-    private final static String subject = "zhangsp";
+    private final static String subject = "acumenbot.ai";
 
     /**
      * 创建jwt
      *
      * @return 返回生成的jwt token
      */
-    public static String generateJwtToken(Map<String, Object> map1) {
+    public static String generateJwtToken(Integer accountId, LoginType loginType, JwtType jwtType) {
 
         // 头部 map / Jwt的头部承载，第一部分
         // 可不设置 默认格式是{"alg":"HS256"}
         Map<String, Object> map = new HashMap<>();
         map.put("alg", "HS256");
         map.put("typ", "JWT");
-
-        //载荷 map / Jwt的载荷，第二部分
-        Map<String, Object> claims = new HashMap<String, Object>();
+        Date issuerDate = new Date();
+        Date expireDate;
+        if(jwtType.equals(JwtType.access_token)){
+            expireDate = new Date(System.currentTimeMillis() + access_token_expiration * 1000);
+        }else{
+            expireDate = new Date(System.currentTimeMillis() + refresh_token_expiration * 1000);
+        }
 
         //私有声明 / 自定义数据，根据业务需要添加
-        claims.putAll(map1);
-        //标准中注册的声明 (建议但不强制使用)
-        //一旦写标准声明赋值之后，就会覆盖了那些标准的声明
-        claims.put("iss", jwt_iss);
+        Payload payload = new Payload(accountId,loginType,jwt_iss,issuerDate,expireDate,jwtType);
+
+        Map<String, Object> claims = payload.toMap();
             /*	iss: jwt签发者
                 sub: jwt所面向的用户
                 aud: 接收jwt的一方
@@ -64,8 +70,8 @@ public class JwtUtil {
                 .setHeader(map)         // 头部信息
                 .setClaims(claims)      // 载荷信息
                 .setId(UUID.randomUUID().toString()) // 设置jti(JWT ID)：是JWT的唯一标识，从而回避重放攻击。
-                .setIssuedAt(new Date())       // 设置iat: jwt的签发时间
-                .setExpiration(new Date(System.currentTimeMillis() + access_token_expiration * 1000)) // 设置exp：jwt过期时间
+                .setIssuedAt(issuerDate)       // 设置iat: jwt的签发时间
+                .setExpiration(expireDate) // 设置exp：jwt过期时间
                 .setSubject(subject)    //设置sub：代表这个jwt所面向的用户，所有人
                 .signWith(SIGNATURE_ALGORITHM, secret)//设置签名：通过签名算法和秘钥生成签名
                 .compact(); // 开始压缩为xxxxx.yyyyy.zzzzz 格式的jwt token
@@ -74,17 +80,21 @@ public class JwtUtil {
     /**
      * 从jwt中获取 载荷 信息
      *
-     * @param jwt
-     * @return
+     * @return payload
      */
-    public static Claims getClaimsFromJwt(String jwt) {
-        Claims claims = null;
-        try {
-            claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(jwt).getBody();
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static Payload getPayloadFromJwt(String jwt) throws ServerException {
+        if(jwt==null){
+            throw new ServerException("Token not Provided");
         }
-        return claims;
+        Claims claims;
+        try{
+            claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(jwt).getBody();
+        }catch (io.jsonwebtoken.ExpiredJwtException e){
+            throw new ServerException("Token Expired");
+        }catch (io.jsonwebtoken.MalformedJwtException e){
+            throw new ServerException("Token Invalid");
+        }
+        return new Payload(claims);
     }
 }
 

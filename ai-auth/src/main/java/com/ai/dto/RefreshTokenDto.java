@@ -1,6 +1,5 @@
-package com.ai.vo;
+package com.ai.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,8 +8,6 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class LoginVo {
-    private String accessToken;
+public class RefreshTokenDto {
     private String refreshToken;
 }

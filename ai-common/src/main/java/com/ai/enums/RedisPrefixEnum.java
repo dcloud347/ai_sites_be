@@ -11,11 +11,6 @@ public enum RedisPrefixEnum {
     /**
      * 列表redis中的各种前缀
      */
-    // 用户的token
-    USER_TOKEN("userToken:"),
-    //管理员的token
-    ADMIN_TOKEN("adminToken:"),
-    ROBOT_TOKEN("robotToken:"),
     ROBOT_SESSION("robotSession:");
     private final String prefix;
 

@@ -2,11 +2,16 @@ package com.ai.service.impl;
 
 import com.ai.aspect.LoginAspect;
 import com.ai.dto.LoginDto;
+import com.ai.dto.RefreshTokenDto;
 import com.ai.dto.UserInfoDto;
 import com.ai.entity.User;
-import com.ai.enums.RedisPrefixEnum;
+import com.ai.enums.JwtType;
+import com.ai.enums.LoginType;
+import com.ai.exceptions.CustomException;
+import com.ai.exceptions.ServerException;
 import com.ai.mapper.UserMapper;
 import com.ai.model.LoginEntity;
+import com.ai.model.Payload;
 import com.ai.service.IUserService;
 import com.ai.util.CommonUtil;
 import com.ai.util.JwtUtil;
@@ -26,9 +31,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+
 import com.ai.util.GoogleUtil;
 import com.ai.util.UserCredentialsGenerator;
 /**
@@ -36,7 +40,7 @@ import com.ai.util.UserCredentialsGenerator;
  * 用户表 服务实现类
  * </p>
  *
- * @author 
+ * @author 潘越
  * @since 2024-03-12
  */
 @Service
@@ -44,11 +48,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
-    @Resource
-    private UserMapper userMapper;
     @Override
     public ResponseEntity<Result<LoginVo>> login(LoginDto loginDto, HttpServletRequest request) {
-        return login_(loginDto,request,RedisPrefixEnum.USER_TOKEN.getPrefix());
+        return login_(loginDto,request,LoginType.USER);
     }
 
     @Override
@@ -64,18 +66,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         User user = new User(loginDto);
         this.save(user);
-        return ResponseEntity.ok(Result.success(new LoginVo(genToken(user,RedisPrefixEnum.USER_TOKEN.getPrefix()))));
-    }
-
-    @Override
-    public  ResponseEntity<Result<LoginVo>> registerByUsername(LoginDto loginDto) {
-        // 查询该用户名是否已经注册
-        if (this.getOne(new QueryWrapper<User>().eq("username", loginDto.getUsername())) != null){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("The username already exist."));
-        }
-        User user = new User(loginDto);
-        this.save(user);
-        return ResponseEntity.ok(Result.success(new LoginVo(genToken(user, RedisPrefixEnum.USER_TOKEN.getPrefix()))));
+        String access_token = JwtUtil.generateJwtToken(user.getId(),LoginType.USER, JwtType.access_token);
+        String refreshToken = JwtUtil.generateJwtToken(user.getId(),LoginType.USER,JwtType.refresh_token);
+        return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 
     @Override
@@ -106,6 +99,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public ResponseEntity<Result<LoginVo>> googleLogin(String token, HttpServletRequest request){
+        //未完成
         String email = GoogleUtil.get_email(token);
         if(email==null){
             return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Authentication Failed."));
@@ -120,25 +114,45 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String ip = CommonUtil.getIpAddr(request);
         one.setLastIp(ip);
         this.updateById(one);
-        return ResponseEntity.ok(Result.success(new LoginVo(genToken(one, RedisPrefixEnum.USER_TOKEN.getPrefix()))));
+        String access_token = JwtUtil.generateJwtToken(one.getId(),LoginType.USER, JwtType.access_token);
+        String refreshToken = JwtUtil.generateJwtToken(one.getId(),LoginType.USER,JwtType.refresh_token);
+        return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 
     @Override
-    public Result<String> logout(String token){
-        stringRedisTemplate.delete(RedisPrefixEnum.USER_TOKEN.getPrefix() + token);
-        return Result.success("");
+    public ResponseEntity<Result<LoginVo>> refreshToken(RefreshTokenDto refreshTokenDto, HttpServletRequest request) throws CustomException {
+        Payload payload;
+        try{
+            payload = JwtUtil.getPayloadFromJwt(refreshTokenDto.getRefreshToken());
+        }catch (ServerException e){
+            throw new CustomException(e.getMessage());
+        }
+        if(!payload.getJwtType().equals(JwtType.refresh_token)){
+            throw new CustomException("Please use refresh token to refresh!");
+        }
+        if(!payload.getLoginType().equals(LoginType.USER) && !payload.getLoginType().equals(LoginType.ROBOT)){
+            throw new CustomException("Permission Denied");
+        }
+        User user = this.getById(payload.getAccountId());
+        String ip = CommonUtil.getIpAddr(request);
+        user.setLastIp(ip);
+        user.setLastDate(LocalDate.now());
+        this.updateById(user);
+        String access_token = JwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.access_token);
+        String refreshToken = JwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.refresh_token);
+        return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 
     @Override
     public ResponseEntity<Result<LoginVo>> speakerLogin(LoginDto loginDto, HttpServletRequest request) {
-        return login_(loginDto,request,RedisPrefixEnum.ROBOT_TOKEN.getPrefix());
+        return login_(loginDto,request,LoginType.ROBOT);
     }
 
     /**
      * general登录
      */
 
-    private ResponseEntity<Result<LoginVo>> login_(LoginDto loginDto, HttpServletRequest request, String prefix){
+    private ResponseEntity<Result<LoginVo>> login_(LoginDto loginDto, HttpServletRequest request, LoginType loginType) {
         User user = new User(loginDto);
         User one;
         one = this.getOne(new QueryWrapper<User>().eq("email", loginDto.getEmailOrUsername()).eq("password", user.getPassword()));
@@ -151,22 +165,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 修改上次登录的ip
         String ip = CommonUtil.getIpAddr(request);
         one.setLastIp(ip);
+        one.setLastDate(LocalDate.now());
         this.updateById(one);
-        return ResponseEntity.ok(Result.success(new LoginVo(genToken(one, prefix))));
-    }
-
-    /**
-     * 发布token
-     */
-    private String genToken(User user, String prefix){
-        HashMap<String, Object> map = new HashMap<>(1);
-        map.put("id", user.getId());
-        String token = JwtUtil.generateJwtToken(map);
-        // 将token存入redis
-        stringRedisTemplate.opsForValue().set(prefix + token, user.getId().toString(),20, TimeUnit.DAYS);
-        // 更新上次登录时间
-        user.setLastDate(LocalDate.now());
-        this.updateById(user);
-        return token;
+        String access_token = JwtUtil.generateJwtToken(one.getId(),loginType, JwtType.access_token);
+        String refreshToken = JwtUtil.generateJwtToken(one.getId(),loginType,JwtType.refresh_token);
+        return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 }

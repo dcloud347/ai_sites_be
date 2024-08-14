@@ -1,6 +1,7 @@
 package com.ai.service;
 
 import com.ai.dto.LoginDto;
+import com.ai.dto.RefreshTokenDto;
 import com.ai.dto.UserInfoDto;
 import com.ai.entity.User;
 import com.ai.util.Result;
@@ -20,7 +21,7 @@ import java.util.List;
  * 用户表 服务类
  * </p>
  *
- * @author 
+ * @author 潘越
  * @since 2024-03-12
  */
 public interface IUserService extends IService<User> {
@@ -28,8 +29,6 @@ public interface IUserService extends IService<User> {
     ResponseEntity<Result<LoginVo>> login(LoginDto loginDto,  HttpServletRequest request);
 
     ResponseEntity<Result<LoginVo>> register(LoginDto loginDto);
-
-    ResponseEntity<Result<LoginVo>> registerByUsername(LoginDto loginDto);
 
     Result updateUserInfo(UserInfoDto userInfoDto);
 
@@ -39,7 +38,8 @@ public interface IUserService extends IService<User> {
 
     ResponseEntity<Result<LoginVo>> googleLogin(String token, HttpServletRequest request);
 
-    Result<String> logout(String token);
+    ResponseEntity<Result<LoginVo>> refreshToken(RefreshTokenDto refreshTokenDto, HttpServletRequest request);
 
     ResponseEntity<Result<LoginVo>> speakerLogin(LoginDto loginDto,  HttpServletRequest request);
+
 }
