@@ -56,7 +56,7 @@ public class ManagerServiceImpl extends ServiceImpl<ManagerMapper, Manager> impl
         try{
             payload = JwtUtil.getPayloadFromJwt(refreshTokenDto.getRefreshToken());
         }catch (ServerException e){
-            throw new CustomException(e.getMessage());
+            throw new CustomException("Refresh "+e.getMessage());
         }
         if(!payload.getJwtType().equals(JwtType.refresh_token)){
             throw new CustomException("Please use refresh token to refresh!");

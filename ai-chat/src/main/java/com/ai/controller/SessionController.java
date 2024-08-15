@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 
@@ -44,6 +45,7 @@ public class SessionController {
         }
         session.setTitle("new chat");
         session.setUserId(loginEntity.getUserId());
+        session.setStartTime(LocalDateTime.now());
         session.setType(loginEntity.getType());
         sessionService.save(session);
         HashMap<String, Object> map = new HashMap<>();

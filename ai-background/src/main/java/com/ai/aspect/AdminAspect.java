@@ -4,6 +4,7 @@ package com.ai.aspect;
 import com.ai.annotation.RoleRequired;
 import com.ai.entity.AdminEntity;
 import com.ai.entity.Manager;
+import com.ai.enums.JwtType;
 import com.ai.enums.LoginType;
 import com.ai.exceptions.ServerException;
 import com.ai.model.Payload;
@@ -64,12 +65,17 @@ public class AdminAspect {
             payload = JwtUtil.getPayloadFromJwt(accessToken);
         }catch (ServerException e){
             response.setStatus(Result.error().getCode());
-            CommonUtil.sendJsonMessage(response, Result.error(e.getMessage()));
+            CommonUtil.sendJsonMessage(response, Result.error("Access "+e.getMessage()));
             return false;
         }
         if(!payload.getLoginType().equals(LoginType.ADMIN)){
             response.setStatus(Result.error().getCode());
             CommonUtil.sendJsonMessage(response, Result.error("Permission Denied"));
+            return false;
+        }
+        if(payload.getJwtType()!= JwtType.access_token){
+            response.setStatus(Result.error().getCode());
+            CommonUtil.sendJsonMessage(response, Result.error("Please use access token for accessing resources."));
             return false;
         }
         AdminEntity adminEntity = new AdminEntity();
