@@ -3,73 +3,26 @@ env: d6351e73-a3f5-4d49-88a1-d9b1c49487b6
 # 生产环境
 #env: 8056ed5a-a62c-4aa2-aa9b-615bc6764eb3
 spring:
+  application:
+    name: ai-gateway
   cloud:
     nacos:
       discovery:
-        namespace: ${env}
         server-addr: https://config.acumenbot.ai
+        namespace: ${env}
         username: nacos
         password: A1dMlna_iL_l28@
+      #        enabled: false
       config:
-        namespace: ${env}
         server-addr: https://config.acumenbot.ai
         username: nacos
         password: A1dMlna_iL_l28@
+        extension-configs[0]:
+          data-id: ${spring.application.name}.yml
+          group: DEFAULT_GROUP
+          refresh: true
+        file-extension: yml
+        namespace: ${env}
     compatibility-verifier:
       enabled: false
-    gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':                # 匹配所有请求
-            allowedOrigins:    # 跨域处理 允许所有的域
-              - "http://localhost:8080"
-            allowedMethods:      # 支持的方法
-              - "GET"
-              - "POST"
-              - "DELETE"
-              - "PUT"
-              - "OPTIONS"
-            allowCredentials: true
-      default-filters:
-        - DedupeResponseHeader=Vary Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
-      routes:
-        - id: auth_route             # 认证授权服务
-          uri: lb://ai-auth   # 需要转发的地址
-          predicates:
-            - Path=/auth-service/**
-          filters:
-            - StripPrefix=1     # 转发之前去掉第一层的路径
-        - id: notify_route          # 通知服务
-          uri: lb://ai-notify   # 需要转发的地址
-          predicates:
-            - Path=/notify-service/**
-          filters:
-            - StripPrefix=1     # 转发之前去掉第一层的路径
-        - id: chat_route             # 聊天对话服务
-          uri: lb://ai-chat   # 需要转发的地址
-          predicates:
-            - Path=/chat-service/**
-          filters:
-            - StripPrefix=1     # 转发之前去掉第一层的路径
-        - id: hardware_route             # 硬件服务
-          uri: lb://ai-hardware   # 需要转发的地址
-          predicates:
-            - Path=/hardware-service/**
-          filters:
-            - StripPrefix=1     # 转发之前去掉第一层的路径
-        - id: background_route             # 后台服务
-          uri: lb://ai-background   # 需要转发的地址
-          predicates:
-            - Path=/background-service/**
-          filters:
-            - StripPrefix=1     # 转发之前去掉第一层的路径
-      discovery:
-        locator:
-          enabled: true
-  application:
-    name: ai-gateway
-  main:
-    web-application-type: reactive
-server:
-  port: 8080
 
