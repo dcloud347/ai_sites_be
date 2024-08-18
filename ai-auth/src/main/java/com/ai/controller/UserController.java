@@ -4,7 +4,6 @@ import com.ai.annotation.LoginRequired;
 import com.ai.aspect.LoginAspect;
 import com.ai.dto.LoginDto;
 import com.ai.dto.RefreshTokenDto;
-import com.ai.entity.User;
 import com.ai.feign.EmailService;
 import com.ai.model.LoginEntity;
 import com.ai.service.IUserService;
@@ -18,8 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -102,31 +99,5 @@ public class UserController {
     @PostMapping("refresh-token")
     public ResponseEntity<Result<LoginVo>> refreshToken(@RequestBody RefreshTokenDto refreshTokenDto, HttpServletRequest request){
         return userService.refreshToken(refreshTokenDto,request);
-    }
-
-    /**
-     * 查询余额
-     */
-    @LoginRequired
-    @GetMapping("tokens")
-    public Result<Map<String, Integer>> tokens(){
-        LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        User user = userService.getById(loginEntity.getUserId());
-        Map<String, Integer> result = new HashMap<>();
-        result.put("tokens",user.getTokens());
-        return Result.success(result);
-    }
-
-    /**
-     * 扣费
-     */
-    @LoginRequired
-    @GetMapping("setTokens")
-    public Result decrease(@RequestParam Integer tokens){
-        LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        User user = userService.getById(loginEntity.getUserId());
-        user.setTokens(user.getTokens() - tokens);
-        userService.updateById(user);
-        return Result.success();
     }
 }

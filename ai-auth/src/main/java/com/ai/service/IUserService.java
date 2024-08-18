@@ -30,7 +30,7 @@ public interface IUserService extends IService<User> {
 
     ResponseEntity<Result<LoginVo>> register(LoginDto loginDto);
 
-    Result updateUserInfo(UserInfoDto userInfoDto);
+    Result<Object> updateUserInfo(UserInfoDto userInfoDto);
 
     Result<UserInfoVo> userInfo();
 

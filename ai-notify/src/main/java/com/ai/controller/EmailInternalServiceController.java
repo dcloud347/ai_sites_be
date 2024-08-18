@@ -1,6 +1,5 @@
 package com.ai.controller;
 
-import com.ai.dto.EmailDto;
 import com.ai.util.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -17,24 +16,19 @@ import javax.annotation.Resource;
  */
 
 @RestController
-@RequestMapping("notify")
-public class EmailController {
+@RequestMapping("/internal-service/notify")
+public class EmailInternalServiceController {
     @Resource
     private JavaMailSender mailSender;
     @Value("${spring.mail.username}")
     private String sender;
 
     @PostMapping("sendCode")
-    public Result sendCode(@RequestBody String email, String code){
+    public Result<Object> sendCode(@RequestBody String email, String code){
         sendMail(email, code);
         return Result.success();
     }
 
-    @PostMapping("sendCode2")
-    public Result sendCode2(@RequestBody EmailDto emailDto){
-        sendMail(emailDto.getEmail(), emailDto.getCode());
-        return Result.success();
-    }
     private void sendMail(String email, String code) {
         SimpleMailMessage mimeMessage = new SimpleMailMessage();
         mimeMessage.setFrom(sender);

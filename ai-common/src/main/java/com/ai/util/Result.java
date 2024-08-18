@@ -1,5 +1,7 @@
 package com.ai.util;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -35,7 +37,7 @@ public class Result<T> implements Serializable {
      * 无参响应成功
      */
     public static <T> Result<T> success() {
-        return new Result<T>(ResultCode.SUCCESS.getCode(),"success",null);
+        return new Result<>(ResultCode.SUCCESS.getCode(), "success", null);
     }
 
     /**
@@ -46,7 +48,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> success(T data) {
-        return new Result<T>(ResultCode.SUCCESS.getCode(),"success",data);
+        return new Result<>(ResultCode.SUCCESS.getCode(), "success", data);
     }
 
     /**
@@ -57,7 +59,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> success(String msg) {
-        return new Result<T>(ResultCode.SUCCESS.getCode(),msg,null);
+        return new Result<>(ResultCode.SUCCESS.getCode(), msg, null);
     }
 
     /**
@@ -69,7 +71,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> success(String msg, T data) {
-        return new Result<T>(ResultCode.SUCCESS.getCode(),msg,data);
+        return new Result<>(ResultCode.SUCCESS.getCode(), msg, data);
     }
 
     /**
@@ -79,7 +81,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error() {
-        return new Result<T>(ResultCode.BAD_REQUEST.getCode(), "error",null);
+        return new Result<>(ResultCode.BAD_REQUEST.getCode(), "error", null);
     }
 
     /**
@@ -89,7 +91,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error(String msg) {
-        return new Result<T>(ResultCode.BAD_REQUEST.getCode(), msg,null);
+        return new Result<>(ResultCode.BAD_REQUEST.getCode(), msg, null);
     }
 
     /**
@@ -101,7 +103,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error(int code, String msg) {
-        return new Result<T>(code, msg,null);
+        return new Result<>(code, msg, null);
     }
 
     /**
@@ -114,7 +116,7 @@ public class Result<T> implements Serializable {
      * @return 通用返回Result
      */
     public static <T> Result<T> error(ResultCode resultCode) {
-        return new Result<T>(resultCode.getCode(), "error",null);
+        return new Result<>(resultCode.getCode(), "error", null);
     }
 
     /**
@@ -148,19 +150,6 @@ public class Result<T> implements Serializable {
     }
 
     /**
-     * 构造器,自定义状态码,返回消息,返回数据
-     *
-     * @param code 状态码
-     * @param msg  返回消息
-     * @param data 返回数据
-     */
-    public Result(int code, String msg, T data) {
-        this.code = code;
-        this.msg = msg;
-        this.data = data;
-    }
-
-    /**
      * 构造器,自定义状态码,返回消息
      *
      * @param code 状态码
@@ -179,5 +168,23 @@ public class Result<T> implements Serializable {
         this.code = code;
         this.data = data;
     }
+
+    /**
+     * 构造器,自定义状态码,返回消息,返回数据
+     *
+     * @param code 状态码
+     * @param msg  返回消息
+     * @param data 返回数据
+     */
+
+    @JsonCreator
+    public Result(@JsonProperty("code") int code,
+                  @JsonProperty("msg") String msg,
+                  @JsonProperty("data") T data) {
+        this.code = code;
+        this.msg = msg;
+        this.data = data;
+    }
+
 }
 

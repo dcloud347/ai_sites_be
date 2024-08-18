@@ -128,13 +128,4 @@ public class MessageController {
         }
         return messageService.record(id);
     }
-
-    /**
-     * 查询某用户会话下的聊天记录
-     */
-    @GetMapping("chat/{id}")
-    public Result getChat(@PathVariable String id){
-        ResponseEntity<Result<List<ChatRecordVo>>> record = messageService.record(id);
-        return record.getBody();
-    }
 }

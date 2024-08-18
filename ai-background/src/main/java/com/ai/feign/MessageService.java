@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.List;
+
 
 @Component
 @FeignClient(value = "ai-chat")
@@ -13,8 +15,8 @@ public interface MessageService {
     /**
      * 查询某用户的所有会话记录
      */
-    @GetMapping("/api/session/user/{id}")
-    Result select(@PathVariable String id);
-    @GetMapping("/api/message/chat/{id}")
-    Result getChat(@PathVariable String id);
+    @GetMapping("/internal-service/session/user/{id}")
+    Result<List<Object>> select(@PathVariable String id);
+    @GetMapping("/internal-service/message/chat/{id}")
+    Result<List<Object>> getChat(@PathVariable String id);
 }

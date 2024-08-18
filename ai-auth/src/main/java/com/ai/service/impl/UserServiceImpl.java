@@ -72,7 +72,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
-    public Result updateUserInfo(UserInfoDto userInfoDto) {
+    public Result<Object> updateUserInfo(UserInfoDto userInfoDto) {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         User user = this.getById(loginEntity.getUserId());
         user.setNick(userInfoDto.getNick());

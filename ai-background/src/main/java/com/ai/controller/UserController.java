@@ -46,7 +46,7 @@ public class UserController {
 
     @GetMapping("{id}")
     @RoleRequired({RoleRequired.RoleEnum.admin, RoleRequired.RoleEnum.superAdmin})
-    public ResponseEntity<Result> getData(@PathVariable String id){
+    public Result<Object> getData(@PathVariable String id){
         return userService.userData(id);
     }
 }

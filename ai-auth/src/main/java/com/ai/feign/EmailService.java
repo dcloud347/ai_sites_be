@@ -20,6 +20,6 @@ public interface EmailService {
      * @param email 邮箱
      * @param code  验证码
      */
-    @PostMapping("notify/sendCode")
-    Result sendCode(@RequestBody String email, @RequestParam("code") String code);
+    @PostMapping("/internal-service/notify/sendCode")
+    Result<Object> sendCode(@RequestBody String email, @RequestParam("code") String code);
 }
