@@ -4,6 +4,7 @@ import com.ai.annotation.LoginRequired;
 import com.ai.aspect.LoginAspect;
 import com.ai.dto.LoginDto;
 import com.ai.dto.RefreshTokenDto;
+import com.ai.dto.VerifyTokenDto;
 import com.ai.feign.EmailService;
 import com.ai.model.LoginEntity;
 import com.ai.service.IUserService;
@@ -11,6 +12,7 @@ import com.ai.util.CommonUtil;
 import com.ai.util.Result;
 import com.ai.vo.LoginVo;
 
+import com.ai.vo.VerifyTokenVo;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,7 +52,7 @@ public class UserController {
      * 发送邮箱验证码
      */
     @PostMapping("code")
-    public Result sendCode(@RequestBody LoginDto loginDto){
+    public Result<Object> sendCode(@RequestBody LoginDto loginDto){
         String code = CommonUtil.getRandomCode(4);
         // 发送验证码
         emailService.sendCode(loginDto.getEmail(), code);
@@ -79,7 +81,7 @@ public class UserController {
      */
     @PostMapping("cancel")
     @LoginRequired
-    public Result cancel(){
+    public Result<Object> cancel(){
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         userService.removeById(loginEntity.getUserId());
         return Result.success();
@@ -94,10 +96,18 @@ public class UserController {
     }
 
     /**
-     * 刷新Token
+     * 刷新令牌
      */
     @PostMapping("refresh-token")
     public ResponseEntity<Result<LoginVo>> refreshToken(@RequestBody RefreshTokenDto refreshTokenDto, HttpServletRequest request){
         return userService.refreshToken(refreshTokenDto,request);
+    }
+
+    /**
+     * 验证令牌
+     */
+    @PostMapping("verify-token")
+    public Result<VerifyTokenVo> verifyToken(@RequestBody VerifyTokenDto verifyTokenDto){
+        return userService.VerifyToken(verifyTokenDto);
     }
 }

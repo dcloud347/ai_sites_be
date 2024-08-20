@@ -3,11 +3,13 @@ package com.ai.service;
 import com.ai.dto.LoginDto;
 import com.ai.dto.RefreshTokenDto;
 import com.ai.dto.UserInfoDto;
+import com.ai.dto.VerifyTokenDto;
 import com.ai.entity.User;
 import com.ai.util.Result;
 import com.ai.vo.LoginVo;
 import com.ai.vo.UserInfoVo;
 import com.ai.vo.UserVo;
+import com.ai.vo.VerifyTokenVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -41,5 +43,7 @@ public interface IUserService extends IService<User> {
     ResponseEntity<Result<LoginVo>> refreshToken(RefreshTokenDto refreshTokenDto, HttpServletRequest request);
 
     ResponseEntity<Result<LoginVo>> speakerLogin(LoginDto loginDto,  HttpServletRequest request);
+
+    Result<VerifyTokenVo> VerifyToken(VerifyTokenDto verifyTokenDto);
 
 }

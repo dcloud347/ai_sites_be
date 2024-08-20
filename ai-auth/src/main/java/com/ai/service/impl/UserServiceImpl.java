@@ -4,6 +4,7 @@ import com.ai.aspect.LoginAspect;
 import com.ai.dto.LoginDto;
 import com.ai.dto.RefreshTokenDto;
 import com.ai.dto.UserInfoDto;
+import com.ai.dto.VerifyTokenDto;
 import com.ai.entity.User;
 import com.ai.enums.JwtType;
 import com.ai.enums.LoginType;
@@ -20,6 +21,7 @@ import com.ai.util.ResultCode;
 import com.ai.vo.LoginVo;
 import com.ai.vo.UserInfoVo;
 import com.ai.vo.UserVo;
+import com.ai.vo.VerifyTokenVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -48,11 +50,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    /**
+     *普通用户接口
+     */
     @Override
     public ResponseEntity<Result<LoginVo>> login(LoginDto loginDto, HttpServletRequest request) {
         return login_(loginDto,request,LoginType.USER);
     }
 
+    /**
+     * 注册接口
+     */
     @Override
     public ResponseEntity<Result<LoginVo>> register(LoginDto loginDto) {
         String code = stringRedisTemplate.opsForValue().get(loginDto.getEmail());
@@ -119,6 +127,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 
+    /**
+     * 刷新令牌接口
+     */
     @Override
     public ResponseEntity<Result<LoginVo>> refreshToken(RefreshTokenDto refreshTokenDto, HttpServletRequest request) throws CustomException {
         Payload payload;
@@ -143,15 +154,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 
+    /**
+     *音响登录接口
+     */
     @Override
     public ResponseEntity<Result<LoginVo>> speakerLogin(LoginDto loginDto, HttpServletRequest request) {
         return login_(loginDto,request,LoginType.ROBOT);
     }
 
     /**
+     * 验证令牌接口
+     */
+    @Override
+    public Result<VerifyTokenVo> VerifyToken(VerifyTokenDto verifyTokenDto) {
+        String token = verifyTokenDto.getToken();
+        VerifyTokenVo verifyTokenVo = new VerifyTokenVo();
+        Payload payload;
+        try{
+            payload = JwtUtil.getPayloadFromJwt(token);
+        }catch (ServerException e){
+            verifyTokenVo.setValid(false);
+            return Result.success(verifyTokenVo);
+        }
+        verifyTokenVo.setValid(true);
+        verifyTokenVo.setJwtType(payload.getJwtType());
+        verifyTokenVo.setLoginType(payload.getLoginType());
+        return Result.success(verifyTokenVo);
+    }
+
+    /**
      * general登录
      */
-
     private ResponseEntity<Result<LoginVo>> login_(LoginDto loginDto, HttpServletRequest request, LoginType loginType) {
         User user = new User(loginDto);
         User one;
