@@ -179,6 +179,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         verifyTokenVo.setValid(true);
         verifyTokenVo.setJwtType(payload.getJwtType());
         verifyTokenVo.setLoginType(payload.getLoginType());
+        verifyTokenVo.setAccountId(payload.getAccountId());
         return Result.success(verifyTokenVo);
     }
 

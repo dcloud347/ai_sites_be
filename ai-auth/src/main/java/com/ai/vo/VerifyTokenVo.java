@@ -16,4 +16,5 @@ public class VerifyTokenVo {
     private boolean isValid;
     private JwtType jwtType;
     private LoginType loginType;
+    private Integer accountId;
 }
