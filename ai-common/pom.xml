@@ -98,7 +98,7 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
-            <version>0.9.1</version>
+            <version>0.12.6</version>
         </dependency>
         <!--        添加nacos客户端-->
         <dependency>

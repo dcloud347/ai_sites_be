@@ -35,8 +35,6 @@ public class Payload {
         this.accountId = (Integer) claims.get("accountId");
         this.loginType = LoginType.valueOf((String) claims.get("loginType"));
         this.iss = (String) claims.get("iss");
-        System.out.println(claims.get("issueDate"));
-
         this.jwtType =  JwtType.valueOf((String) claims.get("jwtType"));
     }
 
