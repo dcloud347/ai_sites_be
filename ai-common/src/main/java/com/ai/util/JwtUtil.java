@@ -19,7 +19,7 @@ import java.util.*;
 public class JwtUtil {
     //私钥 / 生成签名的时候使用的秘钥secret，一般可以从本地配置文件中读取，切记这个秘钥不能外露，只在服务端使用，在任何场景都不应该流露出去。
     // 一旦客户端得知这个secret, 那就意味着客户端是可以自我签发jwt了。
-    private final static String secretString = "55t%Rn#H6$GzeeVQu!j!NG7@1RPL#cM#S9OI#3#RV[jhkho4EO0QZtIo9K#!ABtuLAj@()wwap%fIc#!2i2@!l#PZax!Mv1[ZeXD#y0y9QCR0#U5_BQahDt1";
+    private final static String secretString = "R6lHAPJW75UMQ5cmplQIgsgkgzn0hn7asGnp0O97lpk=";
     private final static SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretString));
 
     // 过期时间（单位秒）/ 12小时
