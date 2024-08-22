@@ -6,8 +6,10 @@ import com.ai.exceptions.ServerException;
 import com.ai.model.Payload;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 
 import javax.crypto.SecretKey;
 import java.util.*;
@@ -82,7 +84,7 @@ public class JwtUtil {
             claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwt).getPayload();
         }catch (io.jsonwebtoken.ExpiredJwtException e){
             throw new ServerException("Token Expired");
-        }catch (io.jsonwebtoken.MalformedJwtException e){
+        }catch (MalformedJwtException | SignatureException e){
             throw new ServerException("Token Invalid");
         }
         return new Payload(claims);
