@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<Result<String>> handleMultipartException(MultipartException ex) {
-        return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("当前请求不是Multipart请求"));
+        return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Current Request is not a Multipart request!"));
     }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result exceptionHandler(MethodArgumentNotValidException methodArgumentNotValidException ) throws Exception {
