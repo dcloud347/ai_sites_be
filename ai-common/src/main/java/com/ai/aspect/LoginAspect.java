@@ -5,9 +5,9 @@ import com.ai.enums.LoginType;
 import com.ai.enums.Type;
 import com.ai.exceptions.ServerException;
 import com.ai.model.LoginEntity;
+import com.ai.exceptions.CustomException;
 import com.ai.model.Payload;
 import com.ai.util.JwtUtil;
-import com.ai.util.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
@@ -41,13 +41,13 @@ public class LoginAspect {
         try{
             payload = JwtUtil.getPayloadFromJwt(accessToken);
         }catch (ServerException e){
-            return Result.error(e.getMessage());
+            throw new CustomException(e.getMessage());
         }
         if(!payload.getLoginType().equals(LoginType.USER) && !payload.getLoginType().equals(LoginType.ROBOT)){
-            return Result.error("Permission Denied");
+            throw new CustomException("Permission Denied");
         }
         if(payload.getJwtType()!= JwtType.access_token){
-            return Result.error("Please use access token for accessing resources.");
+            throw new CustomException("Please use access token for accessing resources.");
         }
         LoginEntity loginEntity = new LoginEntity();
         loginEntity.setUserId(payload.getAccountId());
