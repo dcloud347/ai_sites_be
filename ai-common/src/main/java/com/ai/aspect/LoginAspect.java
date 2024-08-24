@@ -6,7 +6,6 @@ import com.ai.enums.Type;
 import com.ai.exceptions.ServerException;
 import com.ai.model.LoginEntity;
 import com.ai.model.Payload;
-import com.ai.util.CommonUtil;
 import com.ai.util.JwtUtil;
 import com.ai.util.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -19,7 +18,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author 刘晨
@@ -38,25 +36,18 @@ public class LoginAspect {
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
-        HttpServletResponse response = attributes.getResponse();
         String accessToken = request.getHeader("Authorization");
         Payload payload;
         try{
             payload = JwtUtil.getPayloadFromJwt(accessToken);
         }catch (ServerException e){
-            response.setStatus(Result.error().getCode());
-            CommonUtil.sendJsonMessage(response, Result.error(e.getMessage()));
-            return false;
+            return Result.error(e.getMessage());
         }
         if(!payload.getLoginType().equals(LoginType.USER) && !payload.getLoginType().equals(LoginType.ROBOT)){
-            response.setStatus(Result.error().getCode());
-            CommonUtil.sendJsonMessage(response, Result.error("Permission Denied"));
-            return false;
+            return Result.error("Permission Denied");
         }
         if(payload.getJwtType()!= JwtType.access_token){
-            response.setStatus(Result.error().getCode());
-            CommonUtil.sendJsonMessage(response, Result.error("Please use access token for accessing resources."));
-            return false;
+            return Result.error("Please use access token for accessing resources.");
         }
         LoginEntity loginEntity = new LoginEntity();
         loginEntity.setUserId(payload.getAccountId());

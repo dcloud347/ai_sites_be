@@ -7,7 +7,6 @@ import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
 import com.ai.service.ISessionService;
 import com.ai.util.Result;
-import com.ai.util.ResultCode;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +14,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -33,24 +31,25 @@ public class SessionController {
      */
     @PostMapping
     @LoginRequired
-    public ResponseEntity<Result> create(@RequestBody(required = false) Session session, HttpServletRequest request){
-        if (session == null){
-            session = new Session();
-        }
+    public Result<Object> create(){
+        Session session;
+        HashMap<String, Object> map = new HashMap<>();
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         // 判断该用户之前是不是有new chat记录
         List<Session> list = sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).eq("title", "new chat"));
-        if (list == null || !list.isEmpty()){
-            return ResponseEntity.status(ResultCode.BAD_REQUEST.getCode()).body(Result.error("Repetitive conversation"));
+        if (list != null && !list.isEmpty()){
+            session = list.get(0);
+            map.put("sessionId", session.getId());
+            return Result.success(map);
         }
+        session = new Session();
         session.setTitle("new chat");
         session.setUserId(loginEntity.getUserId());
         session.setStartTime(LocalDateTime.now());
         session.setType(loginEntity.getType());
         sessionService.save(session);
-        HashMap<String, Object> map = new HashMap<>();
         map.put("sessionId", session.getId());
-        return ResponseEntity.ok().body(Result.success(map));
+        return Result.success(map);
     }
 
     /**
@@ -58,7 +57,7 @@ public class SessionController {
      */
     @DeleteMapping
     @LoginRequired
-    public ResponseEntity<Result> delete(@RequestParam String id) throws CustomException {
+    public ResponseEntity<Result<Object>> delete(@RequestParam String id) throws CustomException {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         Session session = sessionService.getById(id);
         if (session == null){
