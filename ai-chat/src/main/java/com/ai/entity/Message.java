@@ -73,6 +73,7 @@ public class Message implements Serializable {
         content = chatDto.getContent();
         sessionId = chatDto.getSessionId();
         createTime = LocalDateTime.now();
+        model=chatDto.getModel();
     }
 
     public Message(ChatVo chatVo){
