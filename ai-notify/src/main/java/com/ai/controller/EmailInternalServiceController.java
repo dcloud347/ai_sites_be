@@ -183,22 +183,17 @@ public class EmailInternalServiceController {
                                 <p>Verifying your email address</p>
                             </div>
                             <div class="section">
-                                <p>Hello, (""" + email +
+                                <p>Hello,""" + email +
                                 """
-                                )!</p>
-                                <p>
-                                    You are recieveing this email because (explain reason why. Someone
-                                    trying to use email recover password? Basic email verification at
-                                    sign up? 2 factor verification?).
-                                </p>
-                                <p>
-                                    When: Aug 10, 2024 11:45am PST Device: Google Chrome Location:
-                                    California, United States
-                                </p>
-                                <div class="code-container gray-stroke">
-                                    <p>If this was you, here is your code:</p>
-                                    <div class="code">
-                                    """
+                                        !</p>
+                                                <p>
+                                                                You are receiving this email because we have received a request to register an account under your email. Please copy this code and use it to confirm that this is you, or click the link below to continue your registration process.
+                                                            </p>
+                                                                      
+                                        <div class="code-container gray-stroke">
+                                            <p>If this was you, here is your code:</p>
+                                            <div class="code">
+                                            """
                                     + code +
                                     """
                                     </div>
