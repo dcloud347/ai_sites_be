@@ -3,15 +3,9 @@ package com.ai.util;
 import com.ai.config.OpenAiConfig;
 import com.ai.vo.ChatApiVo;
 import com.google.gson.Gson;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.http.MediaType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -59,41 +53,5 @@ public class Gpt3Util {
                 .POST(HttpRequest.BodyPublishers.ofString(jsonData, StandardCharsets.UTF_8))
 //                .timeout(Duration.ofSeconds(3))
                 .build();
-    }
-
-    public String uploadFile(MultipartFile file) throws IOException {
-        // 构建多部分请求体
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new ByteArrayResource(file.getBytes()) {
-            @Override
-            public String getFilename() {
-                return file.getOriginalFilename();
-            }
-        });
-        body.add("purpose", "fine-tune");
-        // 发送请求
-        String response = webClient.post().uri("v1/files")
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .body(BodyInserters.fromMultipartData(body))
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-
-        if (response == null) {
-            throw new IOException("Failed to upload file, no response from server.");
-        }
-
-        return response;
-    }
-
-
-    public static void main(String[] args) {
-        ChatApiVo chatApiVo = new ChatApiVo().setModel("gpt-4o").setStream(true);
-            chatApiVo.addTextMessage("给我讲讲苏格拉底的故事","user");
-        Gpt3Util gpt3Util = new Gpt3Util();
-        HttpRequest request = gpt3Util.getChatRequest(chatApiVo);
-        HttpClient client = HttpClient.newHttpClient();
-
-
     }
 }

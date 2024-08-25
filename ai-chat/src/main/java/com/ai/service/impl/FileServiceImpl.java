@@ -7,19 +7,16 @@ import com.ai.mapper.FileMapper;
 import com.ai.model.LoginEntity;
 import com.ai.service.IFileService;
 import com.ai.util.CommonUtil;
-import com.ai.util.Gpt3Util;
 import com.ai.util.OssUtils;
 import com.ai.util.Result;
-import com.ai.vo.UploadVo;
-import com.alibaba.fastjson.JSON;
+import com.ai.vo.FileVo;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.annotation.Resource;
-import java.io.IOException;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -37,26 +34,24 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
     private String chatting_files_container;
 
     @Override
-    public ResponseEntity<Result<UploadVo>> uploadFile(MultipartFile file) throws CustomException {
+    public Result<FileVo> uploadFile(MultipartFile file) throws CustomException {
         if (file.isEmpty()) {
             throw new CustomException("The file can not be empty.");
         }
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        try {
-            // 调用工具类上传文件
-            String response = new Gpt3Util().uploadFile(file);
-            UploadVo uploadVo = JSON.parseObject(response, UploadVo.class);
-            // 文件类型
-            String t = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
-            // 上传到对象存储
-            String name = loginEntity.getUserId() + "/"  + CommonUtil.generateUUID() + t;
-            String url = ossUtils.uploadFile(file, name, chatting_files_container);
-            uploadVo.setUrl(url);
-            this.save(new File(uploadVo));
-            return ResponseEntity.ok(Result.success(uploadVo));
-
-        } catch (IOException e) {
-            throw new CustomException("File upload failed: " + e.getMessage());
+        // 文件类型
+        String t = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
+        // 上传到对象存储
+        String Id = CommonUtil.generateUUID();
+        while(this.getById(Id)!=null){
+            Id = CommonUtil.generateUUID();
         }
+        String fileName = Id + t;
+        String name = loginEntity.getUserId() + "/"  + fileName;
+        String url = ossUtils.uploadFile(file, name, chatting_files_container);
+        File file_ = new File().setId(Id).setFilename(fileName).setCreatedAt(LocalDateTime.now()).setUrl(url);
+        file_.setBytes(file.getSize());
+        this.save(file_);
+        return Result.success(new FileVo(file_));
     }
 }

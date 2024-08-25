@@ -215,10 +215,12 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         String ip = CommonUtil.getIpAddr(request);
         Session session = sessionService.getById(message1.getSessionId());
         Mono<LocalDateTime> dateTime = sessionService.getTimeZone(ip);
+        LocalDateTime localDateTime;
         if(dateTime.blockOptional().isEmpty()) {
-            throw new CustomException("Local Time Parse Error");
+            localDateTime = LocalDateTime.now();
+        }else{
+            localDateTime = dateTime.block();
         }
-        LocalDateTime localDateTime = dateTime.block();
         session.setStartTime(localDateTime);
         // 将回答加入聊天记录
         chatApiVo.addTextMessage(clear(message1.getContent()),message1.getRole().toString());

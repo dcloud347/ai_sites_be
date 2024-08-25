@@ -6,13 +6,12 @@ import com.ai.entity.AdminEntity;
 import com.ai.entity.Manager;
 import com.ai.enums.JwtType;
 import com.ai.enums.LoginType;
+import com.ai.exceptions.CustomException;
 import com.ai.exceptions.ServerException;
 import com.ai.model.Payload;
 import com.ai.service.IManagerService;
-import com.ai.util.CommonUtil;
 
 import com.ai.util.JwtUtil;
-import com.ai.util.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
@@ -24,8 +23,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -57,34 +54,28 @@ public class AdminAspect {
         RoleRequired.RoleEnum[] roleEnums = roleRequired.value();
         //4.获取注解的值
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-        HttpServletResponse response = attributes.getResponse();
-        String accessToken = request.getHeader("Authorization");
+        String accessToken=null;
+        if (attributes != null) {
+            accessToken = attributes.getRequest().getHeader("Authorization");
+        }
         Payload payload;
         try{
             payload = JwtUtil.getPayloadFromJwt(accessToken);
         }catch (ServerException e){
-            response.setStatus(Result.error().getCode());
-            CommonUtil.sendJsonMessage(response, Result.error("Access "+e.getMessage()));
-            return false;
+            throw new CustomException(e.getMessage());
         }
         if(!payload.getLoginType().equals(LoginType.ADMIN)){
-            response.setStatus(Result.error().getCode());
-            CommonUtil.sendJsonMessage(response, Result.error("Permission Denied"));
-            return false;
+            throw new CustomException("Permission Denied");
         }
         if(payload.getJwtType()!= JwtType.access_token){
-            response.setStatus(Result.error().getCode());
-            CommonUtil.sendJsonMessage(response, Result.error("Please use access token for accessing resources."));
-            return false;
+            throw new CustomException("Please use access token for accessing resources.");
         }
         AdminEntity adminEntity = new AdminEntity();
         adminEntity.setId(payload.getAccountId());
         // 校验权限
         Manager manager = managerService.getById(payload.getAccountId());
         if (!Arrays.toString(roleEnums).contains(manager.getRole())){
-            CommonUtil.sendJsonMessage(response, Result.error("Permission Denied"));
-            return null;
+            throw new CustomException("Permission Denied");
         }
         //通过threadLocal传递用户登录信息
         threadLocal.set(adminEntity);

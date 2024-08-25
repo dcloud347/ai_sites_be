@@ -3,8 +3,7 @@ package com.ai.controller;
 import com.ai.annotation.LoginRequired;
 import com.ai.service.IFileService;
 import com.ai.util.Result;
-import com.ai.vo.UploadVo;
-import org.springframework.http.ResponseEntity;
+import com.ai.vo.FileVo;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -28,11 +27,11 @@ public class FileController {
     private IFileService fileService;
 
     /**
-     * 上传文件给chatgpt
+     * 上传文件
      */
     @PostMapping("/upload")
     @LoginRequired
-    public ResponseEntity<Result<UploadVo>> handleFileUpload(@RequestParam("file") MultipartFile file) {
+    public Result<FileVo> handleFileUpload(@RequestParam("file") MultipartFile file) {
         return fileService.uploadFile(file);
     }
 }
