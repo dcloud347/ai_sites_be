@@ -1,15 +1,16 @@
 package com.ai.entity;
 
-import com.ai.dto.ChatDto;
+import com.ai.dto.MessageDto;
 import com.ai.enums.Role;
 import com.ai.enums.Type;
-import com.ai.vo.ChatVo;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,7 +22,7 @@ import lombok.experimental.Accessors;
  * 消息表
  * </p>
  *
- * @author 
+ * @author 潘越
  * @since 2024-03-14
  */
 @Getter
@@ -29,6 +30,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@TableName(value = "message", autoResultMap = true)
 public class Message implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -43,7 +45,7 @@ public class Message implements Serializable {
 
 
     /**
-     * 角色，system, user 或 assistant
+     * 角色，system, user, assistant 或 tool
      */
     @EnumValue
     private Role role;
@@ -65,25 +67,40 @@ public class Message implements Serializable {
     private Type type;
 
     /**
+     * 对应调用工具消息ID Tool角色消息专用
+     */
+    private String ToolCallId;
+
+    /**
+     * 调用工具信息
+     */
+
+    @TableField(value="tool_call", typeHandler = JacksonTypeHandler.class)
+    private JSONArray toolCall;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;
 
-    public Message(ChatDto chatDto){
-        content = chatDto.getContent();
-        sessionId = chatDto.getSessionId();
-        createTime = LocalDateTime.now();
-        model=chatDto.getModel();
+    public Message(MessageDto messageDto){
+        String content = messageDto.getContent();
+        if(content!=null){
+            content = content.strip();
+        }
+        this.content = content;
+        this.role = messageDto.getRole();
+        this.createTime = LocalDateTime.now();
     }
 
-    public Message(ChatVo chatVo){
-        content = chatVo.getMessage();
-        sessionId = chatVo.getSessionId();
-        createTime = LocalDateTime.now();
-    }
-    public Message(String content,long sessionId){
+
+    public Message(JSONObject msg){
+        String content = msg.getString("content");
+        if(content!=null){
+            content = content.strip();
+        }
         this.content = content;
-        this.sessionId = sessionId;
+        this.role = Role.valueOf(msg.getString("role"));
         this.createTime = LocalDateTime.now();
     }
 }

@@ -1,5 +1,6 @@
 package com.ai.vo;
 
+import com.alibaba.fastjson.JSONArray;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -13,6 +14,8 @@ import java.util.List;
 public class MessageApiVo {
     private String role;
     private List<ContentApiVo> content = new ArrayList<>();
+    private String tool_call_id;
+    private JSONArray tool_calls;
 
     public void addContent(ContentApiVo content_) {
         content.add(content_);

@@ -3,6 +3,7 @@ package com.ai.service.impl;
 import com.ai.aspect.LoginAspect;
 import com.ai.config.SpeakerConfig;
 import com.ai.dto.ChatDto;
+import com.ai.dto.MessageDto;
 import com.ai.entity.File;
 import com.ai.entity.Message;
 import com.ai.entity.Session;
@@ -33,19 +34,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 /**
  * <p>
@@ -70,6 +66,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     @Resource
     private UserService userService;
+
     private final List<String> vision_models = List.of(new String[]{"gpt-4-turbo", "gpt-4o"});
 
     // 判断标题是否修改重新总结
@@ -88,8 +85,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             throw new CustomException("GPT Error.");
         }
         JSONArray choices = jsonObject.getJSONArray("choices");
-        JSONObject choice = choices.getJSONObject(0);
-        return choice.getJSONObject("message");
+        return choices.getJSONObject(0);
     }
 
     // 解析花费的total_tokens
@@ -112,69 +108,78 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                 filename.endsWith(".gif");
     }
 
-    private ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity) throws CustomException{
+    private String getModel(String model_){
         String model;
-        if(chatDto.getModel()==null){
+        if(model_==null){
             throw new CustomException("No specified model!");
         }
-        switch (chatDto.getModel()){
+        switch (model_){
             case "gpt3.5" -> model = "gpt-3.5-turbo";
             case "gpt4" -> model = "gpt-4-turbo";
             case "gpt-4o" -> model = "gpt-4o";
-            default -> throw new CustomException("Unrecognised models " + chatDto.getModel());
+            default -> throw new CustomException("Unrecognised models " + model_);
         }
-        if(chatDto.getFileId()!=null && !vision_models.contains(model)){
-            throw new CustomException(model+" have no vision capabilities!");
+        return model;
+    }
+
+    private ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity) throws CustomException{
+        String model = getModel(chatDto.getModel());
+        if (chatDto.getSessionId() == null){
+            throw new CustomException("No specific Session!");
         }
-        if(chatDto.getSessionId()!=null && sessionService.getById(chatDto.getSessionId()).getUserId()!=loginEntity.getUserId()){
+        Session session = sessionService.getById(chatDto.getSessionId());
+        if(session==null){
+            throw new CustomException("Session doesn't exist!");
+        }
+        if(session.getUserId()!=loginEntity.getUserId()){
             throw new CustomException("No access to this session!");
         }
         ChatApiVo chatApiVo = new ChatApiVo().setModel(model);
-        if (chatDto.getSessionId() == null){
-            // 新建对话
-            Session session = new Session();
-            session.setTitle("new chat").setStartTime(LocalDateTime.now()).setUserId(loginEntity.getUserId());
-            session.setType(loginEntity.getType());
-            sessionService.save(session);
-            chatDto.setSessionId(session.getId());
-            if(Type.ROBOT.equals(loginEntity.getType())){
-                Message message = new Message();
-                message.setRole(Role.system).setSessionId(session.getId()).setContent("Please reply in a short response").setCreateTime(LocalDateTime.now()).setType(loginEntity.getType());
-                this.save(message);
-            }
-        }
 
         QueryWrapper<Message> messageQueryWrapper = new QueryWrapper<>();
-        // 指定只查询content和role字段
-        messageQueryWrapper.select("content", "role","id")
+        // 查询指定字段
+        messageQueryWrapper.select("content", "role","id","tool_call","tool_call_id")
                 .eq("session_id", chatDto.getSessionId())
                 // 按创建时间升序排序
                 .orderByAsc("create_time");
         // 查询出之前的聊天记录，并发回给chatgpt
         this.list(messageQueryWrapper).forEach(message -> {
-            MessageApiVo messageApiVo = new MessageApiVo().setRole(message.getRole().toString());
-            messageApiVo.addTextContent(message.getContent());
-            QueryWrapper<File> fileQueryWrapper = new QueryWrapper<>();
-            fileQueryWrapper.select("filename","url")
-                    .eq("message_id", message.getId());
-            fileService.list(fileQueryWrapper).forEach(file -> {
-                if(isImage(file.getFilename())){
-                    messageApiVo.addImageContent(file.getUrl());
+            MessageApiVo messageApiVo = new MessageApiVo();
+            switch (message.getRole()){
+                case user -> {
+                    messageApiVo.setRole(message.getRole().toString());
+                    messageApiVo.addTextContent(message.getContent());
+                    QueryWrapper<File> fileQueryWrapper = new QueryWrapper<>();
+                    fileQueryWrapper.select("filename","url")
+                            .eq("message_id", message.getId());
+                    List<File> files = fileService.list(fileQueryWrapper);
+                    if(!files.isEmpty() && !vision_models.contains(model)){
+                        throw new CustomException(model+" has no vision capability");
+                    }
+                    files.forEach(file -> {
+                        if(isImage(file.getFilename())){
+                            messageApiVo.addImageContent(file.getUrl());
+                        }
+                    });
                 }
-            });
+                case system -> {
+                    messageApiVo.setRole(message.getRole().toString());
+                    messageApiVo.addTextContent(message.getContent());
+                }
+                case assistant -> {
+                    messageApiVo.setRole(message.getRole().toString());
+                    messageApiVo.addTextContent(message.getContent());
+                    messageApiVo.setTool_calls(message.getToolCall());
+                }
+                case tool -> {
+                    messageApiVo.setRole(message.getRole().toString());
+                    messageApiVo.addTextContent(message.getContent());
+                    messageApiVo.setTool_call_id(message.getToolCallId());
+                }
+                default -> throw new CustomException("Unrecognised Role " + chatDto.getModel());
+            }
             chatApiVo.addMessage(messageApiVo);
         });
-        MessageApiVo messageApiVo = new MessageApiVo().setRole(Role.user.toString());
-        messageApiVo.addTextContent(chatDto.getContent());
-        if(chatDto.getFileId()!=null){
-            chatDto.getFileId().forEach(fileId -> {
-                File file = fileService.getById(fileId);
-                if(isImage(file.getFilename())){
-                    messageApiVo.addImageContent(file.getUrl());
-                }
-            });
-        }
-        chatApiVo.addMessage(messageApiVo);
         // 使单次对话不会太长
         if (chatApiVo.getMessages().size() > 20){
             List<MessageApiVo> messages = chatApiVo.getMessages().subList(0,chatApiVo.getMessages().size()-20);
@@ -184,36 +189,38 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return chatApiVo;
     }
 
-    private ChatVo afterChat(ChatDto chatDto,ChatApiVo chatApiVo, String respondingMessage, Role role,
-                           LoginEntity loginEntity, HttpServletRequest request) {
-        // 保存聊天记录
-        Message message = new Message(chatDto);
-        message.setRole(Role.user);
-        message.setType(loginEntity.getType());
-        this.save(message);
-        if(chatDto.getFileId()!=null){
-            chatDto.getFileId().forEach(fileId -> {
-                File file = fileService.getById(fileId);
-                file.setMessageId(message.getId());
-                fileService.updateById(file);
-            });
-        }
+    private ChatVo afterChat(ChatDto chatDto,ChatApiVo chatApiVo, JSONObject jsonResponse,
+                           LoginEntity loginEntity, HttpServletRequest request){
+
+        JSONObject msg = jsonResponse.getJSONObject("message");
+        String finishReason = jsonResponse.getString("finish_reason");
         // 保存gpt的回复
+
+        Message message = new Message(msg);
+        message.setModel(chatApiVo.getModel());
+        message.setSessionId(chatDto.getSessionId());
+        message.setType(loginEntity.getType());
+
+        //构建返回对象
         ChatVo chatVo = new ChatVo();
-        chatVo.setMessage(respondingMessage).setSessionId(chatDto.getSessionId()).setModel(chatDto.getModel());
-        Message message1 = new Message(respondingMessage.strip(), chatVo.getSessionId());
-        message1.setModel(chatApiVo.getModel());
-        message1.setRole(role);
-        message1.setType(loginEntity.getType());
-        this.save(message1);
+        //如果要调用工具的话保存调用信息
+        if(finishReason.equals("tool_calls")){
+            JSONArray tool_calls = msg.getJSONArray("tool_calls");
+            message.setToolCall(tool_calls);
+            chatVo.setToolCalls(tool_calls);
+        }
+        this.save(message);
+        chatVo.setMessage(msg.getString("content")).setSessionId(chatDto.getSessionId()).setModel(chatDto.getModel());
+
+        // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
         if(Type.ROBOT.equals(loginEntity.getType())){
-            // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
             String key = RedisPrefixEnum.ROBOT_SESSION.getPrefix() + loginEntity.getUserId();
             redisTemplate.opsForValue().set(key, message.getSessionId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
         }
+
         // 更新对话时间
         String ip = CommonUtil.getIpAddr(request);
-        Session session = sessionService.getById(message1.getSessionId());
+        Session session = sessionService.getById(message.getSessionId());
         Mono<LocalDateTime> dateTime = sessionService.getTimeZone(ip);
         LocalDateTime localDateTime;
         if(dateTime.blockOptional().isEmpty()) {
@@ -222,18 +229,23 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             localDateTime = dateTime.block();
         }
         session.setStartTime(localDateTime);
-        // 将回答加入聊天记录
-        chatApiVo.addTextMessage(clear(message1.getContent()),message1.getRole().toString());
+
         // 总结标题
-        if (isPastTitle(session.getTitle())){
-            chatApiVo.addTextMessage("Based on our dialogue, give me a short headline, pick the one you think " +
-                    "is most appropriate, and your answer should only provide me with the headline.",Role.user.toString());
-            // 开始总结
-            chatApiVo.setStream(false);
-            String title = gpt3Util.chat(chatApiVo);
-            JSONObject msg1 = analysis(title);
-            if (msg1 != null) {
-                session.setTitle(msg1.getString("content"));
+        if(finishReason.equals("stop")){
+            // 将回答加入聊天记录
+            chatApiVo.addTextMessage(clear(message.getContent()),message.getRole().toString());
+            if (isPastTitle(session.getTitle())){
+                chatApiVo.addTextMessage("Based on our dialogue, give me a short headline, pick the one you think " +
+                        "is most appropriate, and your answer should only provide me with the headline.",Role.user.toString());
+                // 开始总结
+                chatApiVo.setStream(false);
+                String response = gpt3Util.chat(chatApiVo);
+                JSONObject msg1 = analysis(response).getJSONObject("message");
+                if (msg1 != null) {
+                    String title = msg1.getString("content");
+                    session.setTitle(title);
+                    chatVo.setTitle(title);
+                }
             }
         }
         sessionService.updateById(session);
@@ -250,6 +262,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             throw new CustomException("Insufficient Balance");
         }
         ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity);
+        //加入联网以及其他可能被调用的工具
+        Gpt3Util.addUtils(chatApiVo);
         // 发送消息
         String chat = gpt3Util.chat(chatApiVo);
         if (chat == null){
@@ -257,14 +271,80 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
         JSONObject msg = analysis(chat);
 
-        Role role = Role.valueOf(msg.getString("role"));
-        String content = msg.getString("content");
-        ChatVo chatVo = afterChat(chatDto,chatApiVo, content,role, loginEntity, request);
+        ChatVo chatVo = afterChat(chatDto,chatApiVo, msg, loginEntity, request);
         // 开始扣费
         Integer tokens = getTokens(chat);
         userService.setTokens(tokens, loginEntity.getUserId());
         chatVo.setSurplus(userService.getTokens(loginEntity.getUserId()));
         return ResponseEntity.ok(Result.success(chatVo));
+    }
+
+    @Override
+    public Result<Map<String,Object>> addMessage(MessageDto messageDto, HttpServletRequest request) {
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+
+        if(messageDto.getRole()!=Role.user && messageDto.getRole()!=Role.tool){
+            throw new CustomException("Sending message role must be either user or tool!");
+        }
+
+        //获取Session
+        Session session;
+        if (messageDto.getSessionId() == null){
+            // 如果没有会话则新建一个
+            session = new Session();
+            session.setTitle("new chat").setStartTime(LocalDateTime.now()).setUserId(loginEntity.getUserId());
+            session.setType(loginEntity.getType());
+            sessionService.save(session);
+            messageDto.setSessionId(session.getId());
+            if(Type.ROBOT.equals(loginEntity.getType())){
+                Message message = new Message();
+                message.setRole(Role.system).setSessionId(session.getId()).setContent("Please reply in a short response").setCreateTime(LocalDateTime.now()).setType(loginEntity.getType());
+                this.save(message);
+            }
+        }else{
+            session = sessionService.getById(messageDto.getSessionId());
+            if(session.getUserId()!=loginEntity.getUserId()){
+                throw new CustomException("No access to this session!");
+            }
+        }
+
+        //保存信息
+        Message message = new Message(messageDto);
+        message.setType(loginEntity.getType());
+        message.setSessionId(session.getId());
+        if(messageDto.getRole()==Role.tool){
+            message.setToolCallId(messageDto.getToolCallId());
+        }
+        this.save(message);
+        if(messageDto.getRole()==Role.user){
+            if(messageDto.getFileId()!=null){
+                messageDto.getFileId().forEach(fileId -> {
+                    File file = fileService.getById(fileId);
+                    file.setMessageId(message.getId());
+                    fileService.updateById(file);
+                });
+            }
+        }
+
+        // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
+        if(Type.ROBOT.equals(loginEntity.getType())){
+            String key = RedisPrefixEnum.ROBOT_SESSION.getPrefix() + loginEntity.getUserId();
+            redisTemplate.opsForValue().set(key, session.getId(), SpeakerConfig.sessionActive, TimeUnit.MINUTES);
+        }
+
+        // 更新对话时间
+        String ip = CommonUtil.getIpAddr(request);
+        Mono<LocalDateTime> dateTime = sessionService.getTimeZone(ip);
+        LocalDateTime localDateTime;
+        if(dateTime.blockOptional().isEmpty()) {
+            localDateTime = LocalDateTime.now();
+        }else{
+            localDateTime = dateTime.block();
+        }
+        session.setStartTime(localDateTime);
+        Map<String,Object> result = new HashMap<>();
+        result.put("sessionId",session.getId());
+        return Result.success(result);
     }
 
     @Override
@@ -284,41 +364,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     @Override
     public void streamChat(ChatDto chatDto, HttpServletRequest request, SseEmitter emitter, LoginEntity loginEntity) throws CustomException {
-        ChatApiVo chatApiVo = getChatApiVo(chatDto, loginEntity).setStream(true);
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest chattingRequest = gpt3Util.getChatRequest(chatApiVo);
-        StringBuilder entireContent_sb = new StringBuilder();
-        StringBuilder role_sb = new StringBuilder();
-        try{
-            HttpResponse<Stream<String>> response = client.send(chattingRequest, BodyHandlers.ofLines());
-            // 处理响应体
-            response.body().forEach(line -> {
-                if (!line.equals("data: [DONE]") && line.startsWith("data: ")) {
-                    String json = line.substring("data: ".length());
-                    JSONObject jsonObject = JSON.parseObject(json);
-                    JSONArray choices = jsonObject.getJSONArray("choices");
-                    JSONObject choice = choices.getJSONObject(0);
-                    JSONObject delta = choice.getJSONObject("delta");
-                    String content = delta.getString("content");
-                    String role_ = delta.getString("role");
-                    if(role_ !=null){
-                        role_sb.append(role_);
-                    }
-                    if(content != null){
-                        entireContent_sb.append(content);
-                        ChatVo chatVo = new ChatVo().setMessage(content).setSessionId(chatDto.getSessionId()).setModel(chatDto.getModel());
-                        try {
-                            emitter.send(SseEmitter.event().name("data").data(chatVo));
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-            });
-        }catch (IOException | InterruptedException e) {
-            throw new CustomException("Network Error");
-        }
-        Role role = Role.valueOf(role_sb.toString());
-        afterChat(chatDto,chatApiVo, entireContent_sb.toString(), role, loginEntity, request);
+
     }
 }

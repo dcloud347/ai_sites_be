@@ -3,6 +3,7 @@ package com.ai.controller;
 import com.ai.annotation.LoginRequired;
 import com.ai.aspect.LoginAspect;
 import com.ai.dto.ChatDto;
+import com.ai.dto.MessageDto;
 import com.ai.entity.Session;
 import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
@@ -50,10 +51,19 @@ public class MessageController {
     /**
      * 发起聊天
      */
-    @PostMapping
+    @PostMapping("get-response")
     @LoginRequired
     public ResponseEntity<Result<ChatVo>> chat(@RequestBody ChatDto chatDto, HttpServletRequest request){
         return messageService.chat(chatDto, request);
+    }
+
+    /**
+     * 添加聊天消息
+     */
+    @PostMapping
+    @LoginRequired
+    public Result<Map<String,Object>> addMessages(@RequestBody MessageDto messageDto, HttpServletRequest request){
+        return messageService.addMessage(messageDto, request);
     }
 
     @PostMapping(value = "/stream-chatting")

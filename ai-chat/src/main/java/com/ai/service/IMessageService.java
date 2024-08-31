@@ -1,6 +1,7 @@
 package com.ai.service;
 
 import com.ai.dto.ChatDto;
+import com.ai.dto.MessageDto;
 import com.ai.entity.Message;
 import com.ai.model.LoginEntity;
 import com.ai.util.Result;
@@ -12,6 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -24,6 +26,8 @@ import java.util.List;
 public interface IMessageService extends IService<Message> {
 
     ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request);
+
+    Result<Map<String,Object>> addMessage(MessageDto messageDto, HttpServletRequest request);
 
     ResponseEntity<Result<List<ChatRecordVo>>> record(String id);
 

@@ -14,6 +14,7 @@ public class ChatApiVo {
     private String model;
     private List<MessageApiVo> messages = new ArrayList<>();
     private boolean stream = false;
+    private List<ToolApiVo> tools = new ArrayList<>();
 
     public void addMessage(MessageApiVo messageApiVo){
         messages.add(messageApiVo);
@@ -24,6 +25,13 @@ public class ChatApiVo {
         contents.add(textContentApiVo);
         MessageApiVo messageApiVo = new MessageApiVo().setContent(contents).setRole(role);
         addMessage(messageApiVo);
+    }
+    public void addTool(String name,String description,ParametersApiVo parameters){
+        FunctionApiVo functionApiVo = new FunctionApiVo();
+        functionApiVo.setName(name);
+        functionApiVo.setDescription(description);
+        functionApiVo.setParameters(parameters);
+        tools.add(new ToolApiVo().setFunction(functionApiVo));
     }
 
     public void addImageMessage(String image_url,String text){

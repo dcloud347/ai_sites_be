@@ -2,16 +2,17 @@ package com.ai.util;
 
 import com.ai.config.OpenAiConfig;
 import com.ai.vo.ChatApiVo;
+import com.ai.vo.ParametersApiVo;
 import com.google.gson.Gson;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author 刘晨
@@ -23,10 +24,6 @@ public class Gpt3Util {
     // 将API_KEY替换成你的API密钥
     private static final String API_KEY = new OpenAiConfig().getApiKey();
 
-    private  WebClient webClient =  WebClient.builder()
-            .baseUrl("https://api.openai.com/")
-            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + API_KEY)
-            .build();
     public String chat(ChatApiVo chatApiVo){
         // 创建HttpClient
         HttpClient client = HttpClient.newHttpClient();
@@ -41,6 +38,17 @@ public class Gpt3Util {
         return null;
     }
 
+    public static void addUtils(ChatApiVo chatApiVo){
+        ParametersApiVo parametersApiVo = new ParametersApiVo();
+        parametersApiVo.addProperty("words","string","The searching words");
+        parametersApiVo.addProperty("num","integer","The number of results to return, this number must be in the range 1 to 10");
+        parametersApiVo.addProperty("start","integer","The number of result to start with");
+        parametersApiVo.addRequired("words");
+        parametersApiVo.setAdditionalProperties(false);
+        chatApiVo.addTool("googleSearch","Search on Google", parametersApiVo);
+    }
+
+
     public HttpRequest getChatRequest(ChatApiVo chatApiVo){
         // 准备JSON数据
         Gson gson = new Gson();
@@ -54,4 +62,33 @@ public class Gpt3Util {
 //                .timeout(Duration.ofSeconds(3))
                 .build();
     }
+    public void streamChat(ChatApiVo chatApiVo){
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = getChatRequest(chatApiVo);
+
+
+        // 异步发送请求，并处理响应流
+        CompletableFuture<Void> responseFuture = client.sendAsync(request, HttpResponse.BodyHandlers.ofLines())
+                .thenAccept(response -> {
+                    response.body().forEach(line -> {
+                        System.out.println("Received: " + line);
+                        // 这里可以处理接收到的每一行流数据
+                    });
+                });
+
+        // 等待完成
+        responseFuture.join();
+    }
+
+    public static void main(String[] args) throws Exception{
+        Gpt3Util gpt3Util = new Gpt3Util();
+        ChatApiVo chatApiVo = new ChatApiVo();
+        chatApiVo.addTextMessage("今天有什么新闻","user");
+        chatApiVo.setModel("gpt-4o");
+        Gpt3Util.addUtils(chatApiVo);
+        String result = gpt3Util.chat(chatApiVo);
+        System.out.println(result);
+    }
+
+
 }

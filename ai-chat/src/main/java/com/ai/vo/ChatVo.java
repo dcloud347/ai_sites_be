@@ -1,5 +1,6 @@
 package com.ai.vo;
 
+import com.alibaba.fastjson.JSONArray;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -19,5 +20,10 @@ public class ChatVo {
     private Long sessionId;
 
     private String model;
+
     private Integer surplus;
+
+    private String title;
+
+    private JSONArray toolCalls;
 }
