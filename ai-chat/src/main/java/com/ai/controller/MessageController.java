@@ -88,6 +88,9 @@ public class MessageController {
             ChatResponse chatResponse = new ChatResponse();
             CompletableFuture<Void> responseFuture = client.sendAsync(chatRequest, HttpResponse.BodyHandlers.ofLines())
                     .thenAccept(response -> response.body().forEach(line -> {
+                        if(line.isEmpty()){
+                            return;
+                        }
                         if(!line.startsWith("data: ")){
                             chatResponse.setSuccess(false);
                             return;
@@ -151,20 +154,21 @@ public class MessageController {
                             chatResponse.addContent(content);
                         }
                         try {
-                            emitter.send(delta.toString());
+                            Result<JSONObject> result = Result.success(delta);
+                            emitter.send(JSONObject.toJSON(result).toString());
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                     }));
             // 等待完成
             responseFuture.join();
-
             if(chatResponse.isSuccess()){
                 //保存聊天信息
                 messageService.afterChat(chatDto,chatApiVo,chatResponse,loginEntity,request);
             }else{
                 try {
-                    emitter.send("GPT Error");
+                    Result<Object> result = Result.error("GPT Error");
+                    emitter.send(JSONObject.toJSON(result).toString());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
