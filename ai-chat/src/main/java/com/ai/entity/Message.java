@@ -3,8 +3,8 @@ package com.ai.entity;
 import com.ai.dto.MessageDto;
 import com.ai.enums.Role;
 import com.ai.enums.Type;
+import com.ai.vo.ChatResponse;
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
@@ -94,13 +94,13 @@ public class Message implements Serializable {
     }
 
 
-    public Message(JSONObject msg){
-        String content = msg.getString("content");
+    public Message(ChatResponse chatResponse){
+        String content = chatResponse.getContent();
         if(content!=null){
             content = content.strip();
         }
         this.content = content;
-        this.role = Role.valueOf(msg.getString("role"));
+        this.role = Role.valueOf(chatResponse.getRole());
         this.createTime = LocalDateTime.now();
     }
 }

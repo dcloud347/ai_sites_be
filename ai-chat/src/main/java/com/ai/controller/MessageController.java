@@ -9,10 +9,12 @@ import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
+import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
-import com.ai.vo.ChatRecordVo;
-import com.ai.vo.ChatVo;
-import com.ai.vo.SessionVo;
+import com.ai.vo.*;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +22,14 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -44,9 +50,6 @@ public class MessageController {
 
     @Resource
     private ISessionService sessionService;
-    private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
-    private final ExecutorService executor = Executors.newCachedThreadPool();
-
 
     /**
      * 发起聊天
@@ -70,23 +73,107 @@ public class MessageController {
     @LoginRequired
     public SseEmitter streamChatting(@RequestBody ChatDto chatDto, HttpServletRequest request) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        this.emitters.add(emitter);
-        emitter.onCompletion(() -> this.emitters.remove(emitter));
-        emitter.onTimeout(() -> {
-            emitter.complete();
-            this.emitters.remove(emitter);
-        });
+        emitter.onTimeout(emitter::complete);
+
+        //构建chatApiVo
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        // 开启线程发送数据
-        executor.execute(() -> {
-            try {
-                messageService.streamChat(chatDto,request,emitter,loginEntity);
-                emitter.complete();
-                this.emitters.remove(emitter);
-            } catch (Exception e) {
-                emitter.completeWithError(e);
+        ChatApiVo chatApiVo = messageService.getChatApiVo(chatDto,loginEntity).setStream(true).setIncludeUsage(true);
+        Gpt3Util.addUtils(chatApiVo);
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest chatRequest =  Gpt3Util.getChatRequest(chatApiVo);
+
+        //开启线程
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        service.execute(() -> {
+            ChatResponse chatResponse = new ChatResponse();
+            CompletableFuture<Void> responseFuture = client.sendAsync(chatRequest, HttpResponse.BodyHandlers.ofLines())
+                    .thenAccept(response -> response.body().forEach(line -> {
+                        if(!line.startsWith("data: ")){
+                            chatResponse.setSuccess(false);
+                            return;
+                        }
+                        String jsonData = line.substring(6).trim();
+                        if(jsonData.equals("[DONE]"))return;
+                        JSONObject jsonObject = JSON.parseObject(jsonData);
+                        JSONArray choices = jsonObject.getJSONArray("choices");
+                        JSONObject usage = jsonObject.getJSONObject("usage");
+                        //处理token
+                        if(usage!=null){
+                            chatResponse.setTotal_tokens(usage.getInteger("total_tokens"));
+                        }
+                        //处理delta
+                        JSONObject delta;
+                        if(choices.isEmpty())return;
+
+                        JSONObject choice = choices.getJSONObject(0);
+                        String finish_reason=choice.getString("finish_reason");
+                        if(finish_reason!=null){
+                            chatResponse.addFinishedReason(finish_reason);
+                        }
+                        delta = choice.getJSONObject("delta");
+
+                        JSONArray tool_calls = delta.getJSONArray("tool_calls");
+                        if(tool_calls!=null){
+                            for(int i=0; i<tool_calls.size(); i++){
+                                JSONObject tool_call = tool_calls.getJSONObject(i);
+                                ToolCallResponse toolCallResponse = chatResponse.getToolCall(tool_call.getInteger("index"));
+
+                                String id = tool_call.getString("id");
+                                if(id!=null){
+                                    toolCallResponse.addId(id);
+                                }
+
+                                String type = tool_call.getString("type");
+                                if(type!=null){
+                                    toolCallResponse.addType(type);
+                                }
+
+                                JSONObject function = tool_call.getJSONObject("function");
+                                if(function!=null){
+                                    FunctionResponse functionResponse = toolCallResponse.getFunction();
+                                    String name = function.getString("name");
+                                    if(name!=null){
+                                        functionResponse.addName(name);
+                                    }
+                                    String arguments = function.getString("arguments");
+                                    if(arguments!=null){
+                                        functionResponse.addArguments(arguments);
+                                    }
+                                }
+                            }
+                        }
+                        String role = delta.getString("role");
+                        if(role!=null){
+                            chatResponse.addRole(role);
+                        }
+                        String content = delta.getString("content");
+                        if(content!=null){
+                            chatResponse.addContent(content);
+                        }
+                        try {
+                            emitter.send(delta.toString());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }));
+            // 等待完成
+            responseFuture.join();
+
+            if(chatResponse.isSuccess()){
+                //保存聊天信息
+                messageService.afterChat(chatDto,chatApiVo,chatResponse,loginEntity,request);
+            }else{
+                try {
+                    emitter.send("GPT Error");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
+            // Complete the SSE stream
+            emitter.complete();
         });
+
+        service.shutdown();
         return emitter;
     }
 
@@ -125,7 +212,7 @@ public class MessageController {
     }
 
     /**
-     * 查询具体的聊天记录
+     * 查询聊天记录
      */
     @GetMapping("{id}")
     @LoginRequired

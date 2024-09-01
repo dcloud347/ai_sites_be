@@ -21,9 +21,7 @@ import com.ai.util.CommonUtil;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
 import com.ai.vo.*;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
@@ -31,7 +29,6 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
@@ -58,8 +55,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private ISessionService sessionService;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
-    @Resource
-    private Gpt3Util gpt3Util;
 
     @Resource
     private IFileService fileService;
@@ -76,26 +71,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
     private String clear(String text){
         return StringEscapeUtils.escapeJson(text);
-    }
-
-    // 解析gpt的回复
-    private JSONObject analysis(String text) throws CustomException{
-        JSONObject jsonObject = JSON.parseObject(text);
-        if (jsonObject.getJSONObject("error") != null){
-            throw new CustomException("GPT Error.");
-        }
-        JSONArray choices = jsonObject.getJSONArray("choices");
-        return choices.getJSONObject(0);
-    }
-
-    // 解析花费的total_tokens
-    private Integer getTokens(String text){
-        JSONObject jsonObject = JSON.parseObject(text);
-        if (jsonObject.getJSONObject("error") != null){
-            throw new CustomException("GPT Error.");
-        }
-        JSONObject usage = jsonObject.getJSONObject("usage");
-        return usage.getInteger("total_tokens");
     }
 
     private boolean isImage(String filename){
@@ -122,7 +97,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return model;
     }
 
-    private ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity) throws CustomException{
+    public ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity) throws CustomException{
         String model = getModel(chatDto.getModel());
         if (chatDto.getSessionId() == null){
             throw new CustomException("No specific Session!");
@@ -189,28 +164,25 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return chatApiVo;
     }
 
-    private ChatVo afterChat(ChatDto chatDto,ChatApiVo chatApiVo, JSONObject jsonResponse,
+    public ChatVo afterChat(ChatDto chatDto,ChatApiVo chatApiVo, ChatResponse chatResponse,
                            LoginEntity loginEntity, HttpServletRequest request){
 
-        JSONObject msg = jsonResponse.getJSONObject("message");
-        String finishReason = jsonResponse.getString("finish_reason");
+        String finishReason = chatResponse.getFinishReason();
         // 保存gpt的回复
 
-        Message message = new Message(msg);
+        Message message = new Message(chatResponse);
         message.setModel(chatApiVo.getModel());
         message.setSessionId(chatDto.getSessionId());
         message.setType(loginEntity.getType());
+        if(chatResponse.getToolCalls()!=null){
+            message.setToolCall(new JSONArray(chatResponse.getToolCalls()));
+        }
+        this.save(message);
 
         //构建返回对象
         ChatVo chatVo = new ChatVo();
-        //如果要调用工具的话保存调用信息
-        if(finishReason.equals("tool_calls")){
-            JSONArray tool_calls = msg.getJSONArray("tool_calls");
-            message.setToolCall(tool_calls);
-            chatVo.setToolCalls(tool_calls);
-        }
-        this.save(message);
-        chatVo.setMessage(msg.getString("content")).setSessionId(chatDto.getSessionId()).setModel(chatDto.getModel());
+        chatVo.setToolCalls(chatResponse.getToolCalls());
+        chatVo.setMessage(chatResponse.getContent()).setSessionId(chatDto.getSessionId()).setModel(chatDto.getModel());
 
         // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
         if(Type.ROBOT.equals(loginEntity.getType())){
@@ -239,10 +211,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                         "is most appropriate, and your answer should only provide me with the headline.",Role.user.toString());
                 // 开始总结
                 chatApiVo.setStream(false);
-                String response = gpt3Util.chat(chatApiVo);
-                JSONObject msg1 = analysis(response).getJSONObject("message");
-                if (msg1 != null) {
-                    String title = msg1.getString("content");
+                chatApiVo.setStream_options(null);
+                ChatResponse response = Gpt3Util.chat(chatApiVo);
+                if (response != null) {
+                    String title = response.getContent();
                     session.setTitle(title);
                     chatVo.setTitle(title);
                 }
@@ -265,15 +237,14 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         //加入联网以及其他可能被调用的工具
         Gpt3Util.addUtils(chatApiVo);
         // 发送消息
-        String chat = gpt3Util.chat(chatApiVo);
+        ChatResponse chat = Gpt3Util.chat(chatApiVo);
         if (chat == null){
             throw new CustomException("Network Error");
         }
-        JSONObject msg = analysis(chat);
 
-        ChatVo chatVo = afterChat(chatDto,chatApiVo, msg, loginEntity, request);
+        ChatVo chatVo = afterChat(chatDto,chatApiVo, chat, loginEntity, request);
         // 开始扣费
-        Integer tokens = getTokens(chat);
+        Integer tokens = chat.getTotal_tokens();
         userService.setTokens(tokens, loginEntity.getUserId());
         chatVo.setSurplus(userService.getTokens(loginEntity.getUserId()));
         return ResponseEntity.ok(Result.success(chatVo));
@@ -360,10 +331,5 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             chatRecordVos.add(new ChatRecordVo(message).setFiles(fileVos));
         });
         return ResponseEntity.ok(Result.success(chatRecordVos));
-    }
-
-    @Override
-    public void streamChat(ChatDto chatDto, HttpServletRequest request, SseEmitter emitter, LoginEntity loginEntity) throws CustomException {
-
     }
 }

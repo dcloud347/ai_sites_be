@@ -1,8 +1,10 @@
 package com.ai.util;
 
 import com.ai.config.OpenAiConfig;
-import com.ai.vo.ChatApiVo;
-import com.ai.vo.ParametersApiVo;
+import com.ai.vo.*;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import org.springframework.stereotype.Component;
 
@@ -24,19 +26,51 @@ public class Gpt3Util {
     // 将API_KEY替换成你的API密钥
     private static final String API_KEY = new OpenAiConfig().getApiKey();
 
-    public String chat(ChatApiVo chatApiVo){
+    public static ChatResponse chat(ChatApiVo chatApiVo){
         // 创建HttpClient
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = getChatRequest(chatApiVo);
         try {
             // 发送请求并获取响应
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            return response.body();
+            String json_str =  response.body();
+            JSONObject json = JSON.parseObject(json_str);
+            return analytics(json);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
         return null;
     }
+
+    public static ChatResponse analytics(JSONObject json){
+        JSONObject usage = json.getJSONObject("usage");
+        Integer total_tokens = usage.getInteger("total_tokens");
+        JSONObject choice = json.getJSONArray("choices").getJSONObject(0);
+        String finish_reason = choice.getString("finish_reason");
+        JSONObject message = choice.getJSONObject("message");
+        String content = message.getString("content");
+        String role = message.getString("role");
+        ChatResponse chatResponse = new ChatResponse().
+                setTotal_tokens(total_tokens).
+                setRole(role).
+                setContent(content).
+                setFinishReason(finish_reason);
+        JSONArray tool_calls = message.getJSONArray("tool_calls");
+        if(tool_calls==null)return chatResponse;
+        for(int i = 0; i < tool_calls.size();i++){
+            JSONObject tool_call = tool_calls.getJSONObject(i);
+            ToolCallResponse toolCallResponse = chatResponse.getToolCall(i);
+            toolCallResponse.setId(tool_call.getString("id"));
+            toolCallResponse.setType(tool_call.getString("type"));
+            JSONObject function = tool_call.getJSONObject("function");
+            FunctionResponse functionResponse = toolCallResponse.getFunction();
+            functionResponse.setName(function.getString("name"));
+            functionResponse.setArguments(function.getString("arguments"));
+        }
+        return chatResponse;
+    }
+
+
 
     public static void addUtils(ChatApiVo chatApiVo){
         ParametersApiVo parametersApiVo = new ParametersApiVo();
@@ -49,7 +83,7 @@ public class Gpt3Util {
     }
 
 
-    public HttpRequest getChatRequest(ChatApiVo chatApiVo){
+    public static HttpRequest getChatRequest(ChatApiVo chatApiVo){
         // 准备JSON数据
         Gson gson = new Gson();
         String jsonData = gson.toJson(chatApiVo);
@@ -62,10 +96,12 @@ public class Gpt3Util {
 //                .timeout(Duration.ofSeconds(3))
                 .build();
     }
-    public void streamChat(ChatApiVo chatApiVo){
+    public static void streamChat(ChatApiVo chatApiVo){
+
+        chatApiVo.setStream(true);
+
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = getChatRequest(chatApiVo);
-
 
         // 异步发送请求，并处理响应流
         CompletableFuture<Void> responseFuture = client.sendAsync(request, HttpResponse.BodyHandlers.ofLines())
@@ -81,13 +117,13 @@ public class Gpt3Util {
     }
 
     public static void main(String[] args) throws Exception{
-        Gpt3Util gpt3Util = new Gpt3Util();
         ChatApiVo chatApiVo = new ChatApiVo();
-        chatApiVo.addTextMessage("今天有什么新闻","user");
+        chatApiVo.addTextMessage("给我讲个故事","user");
         chatApiVo.setModel("gpt-4o");
         Gpt3Util.addUtils(chatApiVo);
-        String result = gpt3Util.chat(chatApiVo);
-        System.out.println(result);
+        ChatResponse chatResponse = chat(chatApiVo);
+        JSONObject json = (JSONObject) JSONObject.toJSON(chatResponse);
+        System.out.println(json);
     }
 
 

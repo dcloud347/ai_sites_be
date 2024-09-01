@@ -14,7 +14,16 @@ public class ChatApiVo {
     private String model;
     private List<MessageApiVo> messages = new ArrayList<>();
     private boolean stream = false;
-    private List<ToolApiVo> tools = new ArrayList<>();
+    private List<ToolApiVo> tools;
+    private StreamOptions stream_options;
+
+    public ChatApiVo setIncludeUsage(boolean includeUsage) {
+        if(!stream)return this;
+        this.stream_options = new StreamOptions().setInclude_usage(includeUsage);
+        return this;
+    }
+
+
 
     public void addMessage(MessageApiVo messageApiVo){
         messages.add(messageApiVo);
@@ -27,6 +36,9 @@ public class ChatApiVo {
         addMessage(messageApiVo);
     }
     public void addTool(String name,String description,ParametersApiVo parameters){
+        if(tools == null){
+            tools = new ArrayList<>();
+        }
         FunctionApiVo functionApiVo = new FunctionApiVo();
         functionApiVo.setName(name);
         functionApiVo.setDescription(description);

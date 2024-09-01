@@ -5,11 +5,12 @@ import com.ai.dto.MessageDto;
 import com.ai.entity.Message;
 import com.ai.model.LoginEntity;
 import com.ai.util.Result;
+import com.ai.vo.ChatApiVo;
 import com.ai.vo.ChatRecordVo;
+import com.ai.vo.ChatResponse;
 import com.ai.vo.ChatVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -31,6 +32,9 @@ public interface IMessageService extends IService<Message> {
 
     ResponseEntity<Result<List<ChatRecordVo>>> record(String id);
 
-    void streamChat(ChatDto chatDto, HttpServletRequest request, SseEmitter emitter, LoginEntity loginEntity);
+    ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity);
+
+    ChatVo afterChat(ChatDto chatDto,ChatApiVo chatApiVo, ChatResponse chatResponse,
+                     LoginEntity loginEntity, HttpServletRequest request);
 
 }

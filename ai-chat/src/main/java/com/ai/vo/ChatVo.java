@@ -1,9 +1,10 @@
 package com.ai.vo;
 
-import com.alibaba.fastjson.JSONArray;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.util.List;
 
 /**
  * @author 刘晨
@@ -25,5 +26,5 @@ public class ChatVo {
 
     private String title;
 
-    private JSONArray toolCalls;
+    private List<ToolCallResponse> toolCalls;
 }
