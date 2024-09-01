@@ -119,7 +119,7 @@ public class Gpt3Util {
     public static void main(String[] args) throws Exception{
         ChatApiVo chatApiVo = new ChatApiVo();
         chatApiVo.addTextMessage("给我讲个故事","user");
-        chatApiVo.setModel("gpt-4o");
+        chatApiVo.setModel("gpt-4o-mini");
         Gpt3Util.addUtils(chatApiVo);
         ChatResponse chatResponse = chat(chatApiVo);
         JSONObject json = (JSONObject) JSONObject.toJSON(chatResponse);
