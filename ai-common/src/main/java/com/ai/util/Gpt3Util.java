@@ -74,10 +74,10 @@ public class Gpt3Util {
 
     public static void addUtils(ChatApiVo chatApiVo){
         ParametersApiVo parametersApiVo = new ParametersApiVo();
-        parametersApiVo.addProperty("words","string","The searching words");
+        parametersApiVo.addProperty("word","string","The searching words");
         parametersApiVo.addProperty("num","integer","The number of results to return, this number must be in the range 1 to 10");
         parametersApiVo.addProperty("start","integer","The number of result to start with");
-        parametersApiVo.addRequired("words");
+        parametersApiVo.addRequired("word");
         parametersApiVo.setAdditionalProperties(false);
         chatApiVo.addTool("googleSearch","Search on Google", parametersApiVo);
     }
