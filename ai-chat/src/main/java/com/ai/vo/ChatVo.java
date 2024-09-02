@@ -27,4 +27,6 @@ public class ChatVo {
     private String title;
 
     private List<ToolCallResponse> toolCalls;
+
+    private String finishReason;
 }

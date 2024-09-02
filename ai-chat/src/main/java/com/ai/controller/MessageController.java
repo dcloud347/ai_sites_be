@@ -154,7 +154,9 @@ public class MessageController {
                             chatResponse.addContent(content);
                         }
                         try {
-                            Result<JSONObject> result = Result.success(delta);
+                            Map<String,Object> map = new HashMap<>();
+                            map.put("delta",delta);
+                            Result<Map<String,Object>> result = Result.success(map);
                             emitter.send(JSONObject.toJSON(result).toString());
                         } catch (IOException e) {
                             throw new RuntimeException(e);
@@ -164,7 +166,13 @@ public class MessageController {
             responseFuture.join();
             if(chatResponse.isSuccess()){
                 //保存聊天信息
-                messageService.afterChat(chatDto,chatApiVo,chatResponse,loginEntity,request);
+                ChatVo chatVo = messageService.afterChat(chatDto,chatApiVo,chatResponse,loginEntity,request);
+                try {
+                    Result<Object> result = Result.success(chatVo);
+                    emitter.send(JSONObject.toJSON(result).toString());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }else{
                 try {
                     Result<Object> result = Result.error("GPT Error");

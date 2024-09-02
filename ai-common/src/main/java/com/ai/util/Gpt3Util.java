@@ -121,9 +121,7 @@ public class Gpt3Util {
         chatApiVo.addTextMessage("给我讲个故事","user");
         chatApiVo.setModel("gpt-4o-mini");
         Gpt3Util.addUtils(chatApiVo);
-        ChatResponse chatResponse = chat(chatApiVo);
-        JSONObject json = (JSONObject) JSONObject.toJSON(chatResponse);
-        System.out.println(json);
+        Gpt3Util.streamChat(chatApiVo);
     }
 
 

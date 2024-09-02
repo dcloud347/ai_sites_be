@@ -182,7 +182,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
 
         //构建返回对象
         ChatVo chatVo = new ChatVo();
-        chatVo.setToolCalls(chatResponse.getToolCalls());
+        chatVo.setToolCalls(chatResponse.getToolCalls()).setFinishReason(chatResponse.getFinishReason());
         chatVo.setMessage(chatResponse.getContent()).setSessionId(chatDto.getSessionId()).setModel(chatDto.getModel());
 
         // 音箱新建会话，需要保存会话id, 放在这个位置，每一次发送聊天，都会刷新保存时间，防止突然过期
