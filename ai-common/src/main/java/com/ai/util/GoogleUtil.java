@@ -1,5 +1,7 @@
 package com.ai.util;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -65,17 +67,13 @@ public class GoogleUtil {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if(response.statusCode()==200){
-                return response.body();
+                String result = response.body();
+                JSONObject json = JSON.parseObject(result);
+                return json.getJSONArray("items").toString();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
-    public static void main(String[] args){
-    }
-
-
-
-
 }
