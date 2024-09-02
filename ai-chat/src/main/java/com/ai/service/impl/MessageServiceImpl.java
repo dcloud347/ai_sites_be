@@ -275,6 +275,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             }
         }else{
             session = sessionService.getById(messageDto.getSessionId());
+            if(session==null){
+                throw new CustomException("Session doesn't Exist!");
+            }
             if(session.getUserId()!=loginEntity.getUserId()){
                 throw new CustomException("No access to this session!");
             }
