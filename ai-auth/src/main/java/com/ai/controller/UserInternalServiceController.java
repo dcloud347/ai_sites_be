@@ -1,6 +1,7 @@
 package com.ai.controller;
 
 import com.ai.entity.User;
+import com.ai.exceptions.CustomException;
 import com.ai.service.IUserService;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,9 @@ public class UserInternalServiceController {
     @GetMapping("tokens/{id}")
     public Integer tokens(@PathVariable Integer id){
         User user = userService.getById(id);
+        if(user == null){
+            throw new CustomException("User not Found!");
+        }
         return user.getTokens();
     }
 
