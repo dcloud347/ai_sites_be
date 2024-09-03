@@ -8,8 +8,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.*;
@@ -18,11 +21,12 @@ import java.util.*;
 /**
  * @author 刘晨
  */
+@Component
 public class JwtUtil {
     //私钥 / 生成签名的时候使用的秘钥secret，一般可以从本地配置文件中读取，切记这个秘钥不能外露，只在服务端使用，在任何场景都不应该流露出去。
     // 一旦客户端得知这个secret, 那就意味着客户端是可以自我签发jwt了。
-    private final static String secretString = "R6lHAPJW75UMQ5cmplQIgsgkgzn0hn7asGnp0O97lpk=";
-    private final static SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretString));
+
+    private final SecretKey key;
 
     // 过期时间（单位秒）/ 12小时
     private final static Long access_token_expiration = 3600L * 6;
@@ -35,12 +39,16 @@ public class JwtUtil {
     //jwt所有人
     private final static String subject = "acumenbot.ai";
 
+    public JwtUtil(@Value("${spring.jwt.secret}") String secretString) {
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretString));
+    }
+
     /**
      * 创建jwt
      *
      * @return 返回生成的jwt token
      */
-    public static String generateJwtToken(Integer accountId, LoginType loginType, JwtType jwtType) {
+    public String generateJwtToken(Integer accountId, LoginType loginType, JwtType jwtType) {
 
         // 头部 map / Jwt的头部承载，第一部分
         // 可不设置 默认格式是{"alg":"HS256"}
@@ -75,7 +83,7 @@ public class JwtUtil {
      *
      * @return payload
      */
-    public static Payload getPayloadFromJwt(String jwt) throws ServerException {
+    public Payload getPayloadFromJwt(String jwt) throws ServerException {
         if(jwt==null || jwt.isEmpty()){
             throw new ServerException("Token not Provided");
         }
@@ -88,6 +96,12 @@ public class JwtUtil {
             throw new ServerException("Token Invalid");
         }
         return new Payload(claims);
+    }
+
+    public static void main(String[] args){
+        SecretKey key = Jwts.SIG.HS256.key().build();
+        String secretString = Encoders.BASE64.encode(key.getEncoded());
+        System.out.println(secretString);
     }
 }
 

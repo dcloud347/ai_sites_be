@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -26,6 +27,9 @@ import javax.servlet.http.HttpServletRequest;
 @Component
 public class LoginAspect {
     public static ThreadLocal<LoginEntity> threadLocal = new ThreadLocal<>();
+
+    @Resource
+    private JwtUtil jwtUtil;
 
     @Pointcut("@annotation(com.ai.annotation.LoginRequired)")
     public void loginRequired() {
@@ -39,7 +43,7 @@ public class LoginAspect {
         String accessToken = request.getHeader("Authorization");
         Payload payload;
         try{
-            payload = JwtUtil.getPayloadFromJwt(accessToken);
+            payload = jwtUtil.getPayloadFromJwt(accessToken);
         }catch (ServerException e){
             throw new CustomException(e.getMessage());
         }

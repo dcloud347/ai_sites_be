@@ -17,6 +17,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 
 /**
  * <p>
@@ -28,14 +30,18 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class ManagerServiceImpl extends ServiceImpl<ManagerMapper, Manager> implements IManagerService {
+
+    @Resource
+    private JwtUtil jwtUtil;
+
     @Override
     public Result<LoginVo> login(LoginDto loginDto) {
         Manager one = this.getOne(new QueryWrapper<Manager>().eq("email", loginDto.getEmail()).eq("password", loginDto.getPassword()));
         if (one == null){
             return Result.error("Username or password incorrect.");
         }
-        String accessToken = JwtUtil.generateJwtToken(one.getId(),LoginType.ADMIN, JwtType.access_token);
-        String refreshToken = JwtUtil.generateJwtToken(one.getId(),LoginType.ADMIN, JwtType.refresh_token);
+        String accessToken = jwtUtil.generateJwtToken(one.getId(),LoginType.ADMIN, JwtType.access_token);
+        String refreshToken = jwtUtil.generateJwtToken(one.getId(),LoginType.ADMIN, JwtType.refresh_token);
         LoginVo loginVo = new LoginVo(accessToken,refreshToken,one.getRole());
         return Result.success(loginVo);
     }
@@ -54,7 +60,7 @@ public class ManagerServiceImpl extends ServiceImpl<ManagerMapper, Manager> impl
     public Result<LoginVo> refreshToken(RefreshTokenDto refreshTokenDto) {
         Payload payload;
         try{
-            payload = JwtUtil.getPayloadFromJwt(refreshTokenDto.getRefreshToken());
+            payload = jwtUtil.getPayloadFromJwt(refreshTokenDto.getRefreshToken());
         }catch (ServerException e){
             throw new CustomException("Refresh "+e.getMessage());
         }
@@ -64,8 +70,8 @@ public class ManagerServiceImpl extends ServiceImpl<ManagerMapper, Manager> impl
         if(!payload.getLoginType().equals(LoginType.ADMIN)){
             throw new CustomException("Permission Denied");
         }
-        String access_token = JwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.access_token);
-        String refreshToken = JwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.refresh_token);
+        String access_token = jwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.access_token);
+        String refreshToken = jwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.refresh_token);
         Manager manager = this.getById(payload.getAccountId());
         return Result.success(new LoginVo(access_token, refreshToken,manager.getRole()));
     }

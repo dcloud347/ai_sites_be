@@ -49,6 +49,8 @@ import com.ai.util.UserCredentialsGenerator;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private JwtUtil jwtUtil;
 
     /**
      *普通用户接口
@@ -74,8 +76,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         User user = new User(loginDto);
         this.save(user);
-        String access_token = JwtUtil.generateJwtToken(user.getId(),LoginType.USER, JwtType.access_token);
-        String refreshToken = JwtUtil.generateJwtToken(user.getId(),LoginType.USER,JwtType.refresh_token);
+        String access_token = jwtUtil.generateJwtToken(user.getId(),LoginType.USER, JwtType.access_token);
+        String refreshToken = jwtUtil.generateJwtToken(user.getId(),LoginType.USER,JwtType.refresh_token);
         return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 
@@ -122,8 +124,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String ip = CommonUtil.getIpAddr(request);
         one.setLastIp(ip);
         this.updateById(one);
-        String access_token = JwtUtil.generateJwtToken(one.getId(),LoginType.USER, JwtType.access_token);
-        String refreshToken = JwtUtil.generateJwtToken(one.getId(),LoginType.USER,JwtType.refresh_token);
+        String access_token = jwtUtil.generateJwtToken(one.getId(),LoginType.USER, JwtType.access_token);
+        String refreshToken = jwtUtil.generateJwtToken(one.getId(),LoginType.USER,JwtType.refresh_token);
         return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 
@@ -134,7 +136,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public ResponseEntity<Result<LoginVo>> refreshToken(RefreshTokenDto refreshTokenDto, HttpServletRequest request) throws CustomException {
         Payload payload;
         try{
-            payload = JwtUtil.getPayloadFromJwt(refreshTokenDto.getRefreshToken());
+            payload = jwtUtil.getPayloadFromJwt(refreshTokenDto.getRefreshToken());
         }catch (ServerException e){
             throw new CustomException("Refresh "+e.getMessage());
         }
@@ -149,8 +151,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setLastIp(ip);
         user.setLastDate(LocalDate.now());
         this.updateById(user);
-        String access_token = JwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.access_token);
-        String refreshToken = JwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.refresh_token);
+        String access_token = jwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.access_token);
+        String refreshToken = jwtUtil.generateJwtToken(payload.getAccountId(),payload.getLoginType(), JwtType.refresh_token);
         return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 
@@ -171,7 +173,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         VerifyTokenVo verifyTokenVo = new VerifyTokenVo();
         Payload payload;
         try{
-            payload = JwtUtil.getPayloadFromJwt(token);
+            payload = jwtUtil.getPayloadFromJwt(token);
         }catch (ServerException e){
             verifyTokenVo.setValid(false);
             return Result.success(verifyTokenVo);
@@ -201,8 +203,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         one.setLastIp(ip);
         one.setLastDate(LocalDate.now());
         this.updateById(one);
-        String access_token = JwtUtil.generateJwtToken(one.getId(),loginType, JwtType.access_token);
-        String refreshToken = JwtUtil.generateJwtToken(one.getId(),loginType,JwtType.refresh_token);
+        String access_token = jwtUtil.generateJwtToken(one.getId(),loginType, JwtType.access_token);
+        String refreshToken = jwtUtil.generateJwtToken(one.getId(),loginType,JwtType.refresh_token);
         return ResponseEntity.ok(Result.success(new LoginVo(access_token, refreshToken)));
     }
 }

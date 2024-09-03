@@ -36,6 +36,9 @@ public class AdminAspect {
     @Resource
     private IManagerService managerService;
 
+    @Resource
+    private JwtUtil jwtUtil;
+
     public static ThreadLocal<AdminEntity> threadLocal = new ThreadLocal<>();
 
     @Pointcut("@annotation(com.ai.annotation.RoleRequired)")
@@ -60,7 +63,7 @@ public class AdminAspect {
         }
         Payload payload;
         try{
-            payload = JwtUtil.getPayloadFromJwt(accessToken);
+            payload = jwtUtil.getPayloadFromJwt(accessToken);
         }catch (ServerException e){
             throw new CustomException(e.getMessage());
         }
