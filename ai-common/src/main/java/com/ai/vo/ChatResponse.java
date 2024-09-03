@@ -19,7 +19,7 @@ public class ChatResponse {
 
     private String content="";
 
-    private List<ToolCallResponse> toolCalls = new ArrayList<>();
+    private List<ToolCallResponse> toolCalls;
 
     private String finishReason="";
 
