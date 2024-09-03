@@ -47,8 +47,14 @@ public class ChatResponse {
         ToolCallResponse toolCall;
         try{
              toolCall = toolCalls.get(index);
-        }catch (IndexOutOfBoundsException e){
-            for(int i=0; i< index-toolCalls.size()+1; i++){
+        }catch (IndexOutOfBoundsException | NullPointerException e){
+            int size;
+            if(toolCalls==null){
+                size=0;
+            }else{
+                size = toolCalls.size();
+            }
+            for(int i=0; i< index-size+1; i++){
                 addToolCall(new ToolCallResponse());
             }
             return getToolCall(index);

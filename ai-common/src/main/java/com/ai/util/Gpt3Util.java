@@ -123,8 +123,8 @@ public class Gpt3Util {
 
     public static void main(String[] args) throws Exception{
         ChatApiVo chatApiVo = new ChatApiVo();
-        chatApiVo.addTextMessage("给我讲个故事","user");
-        //chatApiVo.setModel("gpt-4o-mini");
+        chatApiVo.addTextMessage("今天有什么新闻","user");
+        chatApiVo.setModel("gpt-4o-mini");
         Gpt3Util.addUtils(chatApiVo);
         ChatResponse chatResponse = Gpt3Util.chat(chatApiVo);
         System.out.println(chatResponse);
