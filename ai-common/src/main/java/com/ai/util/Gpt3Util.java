@@ -43,6 +43,10 @@ public class Gpt3Util {
     }
 
     public static ChatResponse analytics(JSONObject json){
+        ChatResponse chatResponse = new ChatResponse();
+        if(json.getJSONObject("error")!=null){
+            return chatResponse.setSuccess(false);
+        }
         JSONObject usage = json.getJSONObject("usage");
         Integer total_tokens = usage.getInteger("total_tokens");
         JSONObject choice = json.getJSONArray("choices").getJSONObject(0);
@@ -50,11 +54,10 @@ public class Gpt3Util {
         JSONObject message = choice.getJSONObject("message");
         String content = message.getString("content");
         String role = message.getString("role");
-        ChatResponse chatResponse = new ChatResponse().
-                setTotal_tokens(total_tokens).
-                setRole(role).
-                setContent(content).
-                setFinishReason(finish_reason);
+        chatResponse.setTotal_tokens(total_tokens).
+                    setRole(role).
+                    setContent(content).
+                    setFinishReason(finish_reason);
         JSONArray tool_calls = message.getJSONArray("tool_calls");
         if(tool_calls==null)return chatResponse;
         for(int i = 0; i < tool_calls.size();i++){
@@ -119,9 +122,10 @@ public class Gpt3Util {
     public static void main(String[] args) throws Exception{
         ChatApiVo chatApiVo = new ChatApiVo();
         chatApiVo.addTextMessage("给我讲个故事","user");
-        chatApiVo.setModel("gpt-4o-mini");
+        //chatApiVo.setModel("gpt-4o-mini");
         Gpt3Util.addUtils(chatApiVo);
-        Gpt3Util.streamChat(chatApiVo);
+        ChatResponse chatResponse = Gpt3Util.chat(chatApiVo);
+        System.out.println(chatResponse);
     }
 
 

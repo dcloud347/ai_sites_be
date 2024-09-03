@@ -241,8 +241,9 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         ChatResponse chat = Gpt3Util.chat(chatApiVo);
         if (chat == null){
             throw new CustomException("Network Error");
+        }else if(!chat.isSuccess()){
+            throw new CustomException("Get Response Fail");
         }
-
         ChatVo chatVo = afterChat(chatDto,chatApiVo, chat, loginEntity, request);
         // 开始扣费
         Integer tokens = chat.getTotal_tokens();
@@ -270,7 +271,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             messageDto.setSessionId(session.getId());
             if(Type.ROBOT.equals(loginEntity.getType())){
                 Message message = new Message();
-                message.setRole(Role.system).setSessionId(session.getId()).setContent("Please reply in a short response").setCreateTime(LocalDateTime.now()).setType(loginEntity.getType());
+                message.setRole(Role.system).setSessionId(session.getId()).setContent("You are a chatting robot that is trying to make friends with the user" +
+                        ",please reply in a short response and do not include long or complex url in your response!").setCreateTime(LocalDateTime.now()).setType(loginEntity.getType());
                 this.save(message);
             }
         }else{
