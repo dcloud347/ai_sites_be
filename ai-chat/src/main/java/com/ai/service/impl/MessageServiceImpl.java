@@ -192,16 +192,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
 
         // 更新对话时间
-        String ip = CommonUtil.getIpAddr(request);
         Session session = sessionService.getById(message.getSessionId());
-        Mono<LocalDateTime> dateTime = sessionService.getTimeZone(ip);
-        LocalDateTime localDateTime;
-        if(dateTime.blockOptional().isEmpty()) {
-            localDateTime = LocalDateTime.now();
-        }else{
-            localDateTime = dateTime.block();
-        }
-        session.setStartTime(localDateTime);
+        session.setStartTime(LocalDateTime.now());
 
         // 总结标题
         if(finishReason.equals("stop")){
@@ -309,15 +301,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         }
 
         // 更新对话时间
-        String ip = CommonUtil.getIpAddr(request);
-        Mono<LocalDateTime> dateTime = sessionService.getTimeZone(ip);
-        LocalDateTime localDateTime;
-        if(dateTime.blockOptional().isEmpty()) {
-            localDateTime = LocalDateTime.now();
-        }else{
-            localDateTime = dateTime.block();
-        }
-        session.setStartTime(localDateTime);
+        session.setStartTime(LocalDateTime.now());
         Map<String,Object> result = new HashMap<>();
         result.put("sessionId",session.getId());
         return Result.success(result);
