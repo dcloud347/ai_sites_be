@@ -259,7 +259,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         if(messageDto.getRole()!=Role.user && messageDto.getRole()!=Role.tool){
             throw new CustomException("Sending message role must be either user or tool!");
         }
-
         //获取Session
         Session session;
         if (messageDto.getSessionId() == null){

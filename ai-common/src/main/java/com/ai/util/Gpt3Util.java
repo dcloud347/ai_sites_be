@@ -44,7 +44,9 @@ public class Gpt3Util {
 
     public static ChatResponse analytics(JSONObject json){
         ChatResponse chatResponse = new ChatResponse();
-        if(json.getJSONObject("error")!=null){
+        JSONObject error = json.getJSONObject("error");
+        if(error!=null){
+            System.out.println("error:"+error.getString("message"));
             return chatResponse.setSuccess(false);
         }
         JSONObject usage = json.getJSONObject("usage");
