@@ -11,10 +11,13 @@ import com.ai.vo.ChatResponse;
 import com.ai.vo.ChatVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * <p>
@@ -30,11 +33,12 @@ public interface IMessageService extends IService<Message> {
 
     Result<Map<String,Object>> addMessage(MessageDto messageDto, HttpServletRequest request);
 
-    ResponseEntity<Result<List<ChatRecordVo>>> record(String id);
+    List<ChatRecordVo> record(String id);
 
     ChatApiVo getChatApiVo(ChatDto chatDto, LoginEntity loginEntity);
 
     ChatVo afterChat(ChatDto chatDto,ChatApiVo chatApiVo, ChatResponse chatResponse,
                      LoginEntity loginEntity, HttpServletRequest request);
 
+    Mono<String> getTimeZone(String ip);
 }

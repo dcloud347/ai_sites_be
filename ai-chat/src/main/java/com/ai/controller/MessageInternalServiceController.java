@@ -33,7 +33,7 @@ public class MessageInternalServiceController {
      */
     @GetMapping("chat/{id}")
     public Result<List<ChatRecordVo>> getChat(@PathVariable String id){
-        ResponseEntity<Result<List<ChatRecordVo>>> record = messageService.record(id);
-        return record.getBody();
+        List<ChatRecordVo> record = messageService.record(id);
+        return Result.success(record);
     }
 }

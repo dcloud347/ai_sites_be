@@ -9,6 +9,7 @@ import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
+import com.ai.util.CommonUtil;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
 import com.ai.vo.*;
@@ -19,6 +20,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -26,12 +28,12 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -194,47 +196,86 @@ public class MessageController {
      */
     @GetMapping
     @LoginRequired
-    public Result<Map<String,List<SessionVo>>> list(){
-        LocalDateTime now = LocalDateTime.now();
-        List<SessionVo> today = new ArrayList<>();
-        List<SessionVo> yesterday = new ArrayList<>();
-        List<SessionVo> last7Days = new ArrayList<>();
-        List<SessionVo> last30Days = new ArrayList<>();
+    public Mono<Result<Map<String, List<SessionVo>>>> list(HttpServletRequest request) {
+        // 获取用户登录信息
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
-        ArrayList<SessionVo> sessionVos = new ArrayList<>();
-        sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).orderByDesc("id")).forEach(session -> sessionVos.add(new SessionVo(session)));
-        for (SessionVo vo : sessionVos) {
-            LocalDate sessionDate = vo.getStartTime().toLocalDate();
-            if (sessionDate.equals(now.toLocalDate())) {
-                today.add(vo);
-            } else if (sessionDate.equals(now.minusDays(1).toLocalDate())) {
-                yesterday.add(vo);
-            } else if (sessionDate.isAfter(now.minusDays(7).toLocalDate())) {
-                last7Days.add(vo);
-            } else if (sessionDate.isAfter(now.minusDays(30).toLocalDate())) {
-                last30Days.add(vo);
+        // 获取用户的 IP 地址
+        String ipAddr = CommonUtil.getIpAddr(request);
+        // 获取用户时区的 Mono 对象
+        Mono<String> timeZoneMono = messageService.getTimeZone(ipAddr);
+        // 异步处理
+        return timeZoneMono.map(timeZoneId -> {
+            // 获取当前时间，转换为用户时区时间
+            LocalDateTime now = LocalDateTime.now(ZoneId.of(timeZoneId));
+            // 定义各个时间段的SessionVo列表
+            List<SessionVo> today = new ArrayList<>();
+            List<SessionVo> yesterday = new ArrayList<>();
+            List<SessionVo> last7Days = new ArrayList<>();
+            List<SessionVo> last30Days = new ArrayList<>();
+            // 查询用户的所有会话，并按 ID 降序排列
+            List<SessionVo> sessionVos = new ArrayList<>();
+            sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).orderByDesc("id"))
+                    .forEach(session -> sessionVos.add(new SessionVo(session)));
+            // 遍历会话列表，将时间转换为用户时区，并进行分类
+            for (SessionVo vo : sessionVos) {
+                // 将 session 的 startTime 转换为用户时区时间
+                LocalDateTime sessionStartTime = vo.getStartTime().atZone(ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of(timeZoneId)).toLocalDateTime();
+                LocalDate sessionDate = sessionStartTime.toLocalDate();
+                // 根据时间段将会话分类
+                if (sessionDate.equals(now.toLocalDate())) {
+                    today.add(vo);
+                } else if (sessionDate.equals(now.minusDays(1).toLocalDate())) {
+                    yesterday.add(vo);
+                } else if (sessionDate.isAfter(now.minusDays(7).toLocalDate())) {
+                    last7Days.add(vo);
+                } else if (sessionDate.isAfter(now.minusDays(30).toLocalDate())) {
+                    last30Days.add(vo);
+                }
             }
-        }
-        Map<String, List<SessionVo>> map = new HashMap<>();
-        map.put("today", today);
-        map.put("yesterday", yesterday);
-        map.put("last7Days", last7Days);
-        map.put("last30Days", last30Days);
-        return Result.success(map);
+            // 将分类结果放入 map
+            Map<String, List<SessionVo>> map = new HashMap<>();
+            map.put("today", today);
+            map.put("yesterday", yesterday);
+            map.put("last7Days", last7Days);
+            map.put("last30Days", last30Days);
+            // 返回结果
+            return Result.success(map);
+        });
     }
+
 
     /**
      * 查询聊天记录
      */
     @GetMapping("{id}")
     @LoginRequired
-    public ResponseEntity<Result<List<ChatRecordVo>>> record(@PathVariable String id) throws CustomException {
+    public Mono<ResponseEntity<Result<List<ChatRecordVo>>>> record(@PathVariable String id, HttpServletRequest request) throws CustomException {
         // 只能查询自己的聊天记录，防越权攻击
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         Session session = sessionService.getById(id);
         if (session == null || session.getUserId() != loginEntity.getUserId()){
             throw new CustomException("No access to the resources");
         }
-        return messageService.record(id);
+        String ipAddr = CommonUtil.getIpAddr(request);
+        // 获取用户所在时区的 Mono 对象（Mono<String> 表示时区 ID）
+        Mono<String> timeZoneMono = messageService.getTimeZone(ipAddr);
+        // 获取聊天记录
+        List<ChatRecordVo> record = messageService.record(id);
+        // 处理异步时间转换
+        return timeZoneMono.map(timeZoneId -> {
+            // 将每条记录的时间从 UTC 转换为用户所在时区的时间
+            List<ChatRecordVo> updatedRecords = record.stream().map(chatRecordVo -> {
+                // 假设 chatRecordVo 中的 createTime 是 LocalDateTime 格式
+                LocalDateTime utcCreateTime = chatRecordVo.getCreateTime();
+                // 转换 UTC 时间为用户时区时间
+                ZonedDateTime utcZonedDateTime = utcCreateTime.atZone(ZoneId.of("UTC"));
+                ZonedDateTime userZonedDateTime = utcZonedDateTime.withZoneSameInstant(ZoneId.of(timeZoneId));
+                // 更新 Vo 的 createTime 为用户时区的时间
+                chatRecordVo.setCreateTime(userZonedDateTime.toLocalDateTime());
+                return chatRecordVo;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(Result.success(updatedRecords));
+        });
     }
+
 }

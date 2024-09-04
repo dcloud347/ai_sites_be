@@ -52,6 +52,8 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
                 });
     }
 
+
+
     private LocalDateTime extractTimeZoneFromResponse(String response) throws CustomException{
         // JSON解析
         JsonObject jsonObject = JsonParser.parseString(response).getAsJsonObject();

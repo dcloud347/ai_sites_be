@@ -25,19 +25,23 @@ import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -63,7 +67,11 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     private UserService userService;
 
     private final List<String> vision_models = List.of(new String[]{"gpt-4-turbo", "gpt-4o"});
+    private final WebClient webClient;
 
+    public MessageServiceImpl(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.baseUrl("http://ip-api.com").build();
+    }
     // 判断标题是否修改重新总结
     private boolean isPastTitle(String title) {
         return "new chat".equals(title);
@@ -217,7 +225,29 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         return chatVo;
     }
 
+    @Override
+    public Mono<String> getTimeZone(String ip) {
+        return this.webClient.get()
+                .uri("/json/{ip}", ip)
+                .retrieve()
+                .bodyToMono(String.class)
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)))
+                .map(this::extractTimeZoneFromResponse)
+                .onErrorResume(throwable -> {
+                    // Handle the error here
+                    return Mono.empty();
+                });
+    }
 
+    private String extractTimeZoneFromResponse(String response) throws CustomException{
+        // JSON解析
+        JsonObject jsonObject = JsonParser.parseString(response).getAsJsonObject();
+        if("fail".equals(jsonObject.get("status").getAsString())){
+            throw new CustomException("Local Time Parse Error");
+        }
+        String timeZone = jsonObject.get("timezone").getAsString();
+        return timeZone;
+    }
     @Override
     public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) throws CustomException {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
@@ -308,7 +338,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
     }
 
     @Override
-    public ResponseEntity<Result<List<ChatRecordVo>>> record(String id) {
+    public List<ChatRecordVo> record(String id) {
         ArrayList<ChatRecordVo> chatRecordVos = new ArrayList<>();
         List<Message> messages = this.list(new QueryWrapper<Message>().eq("session_id", id));
         messages.forEach(message -> {
@@ -319,6 +349,6 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             fileService.list(fileQueryWrapper).forEach(file -> fileVos.add(new FileVo(file)));
             chatRecordVos.add(new ChatRecordVo(message).setFiles(fileVos));
         });
-        return ResponseEntity.ok(Result.success(chatRecordVos));
+        return chatRecordVos;
     }
 }
