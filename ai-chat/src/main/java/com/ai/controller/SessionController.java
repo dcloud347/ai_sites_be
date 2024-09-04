@@ -2,9 +2,11 @@ package com.ai.controller;
 
 import com.ai.annotation.LoginRequired;
 import com.ai.aspect.LoginAspect;
+import com.ai.entity.Message;
 import com.ai.entity.Session;
 import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
+import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
 import com.ai.util.Result;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -26,6 +28,8 @@ import java.util.List;
 public class SessionController {
     @Resource
     private ISessionService sessionService;
+    @Resource
+    private IMessageService messageService;
     /**
      * 创建一个新的session
      */
@@ -70,12 +74,19 @@ public class SessionController {
     }
 
     /**
-     * 定时删除空session，5分钟一次
+     * 定时删除空session，一小时一次
      */
-    @Scheduled(fixedRate = 1000 * 60 * 5)
+    @Scheduled(fixedRate = 1000 * 60 * 60)
     @Lazy(value = false)
     public void delete(){
-        sessionService.remove(new QueryWrapper<Session>().eq("title", "new chat"));
+        QueryWrapper<Session> eq = new QueryWrapper<Session>().eq("title", "new chat");
+        List<Session> sessionList = sessionService.list(eq);
+        sessionList.stream().forEach(session -> {
+            List<Message> messages = messageService.list(new QueryWrapper<Message>().eq("session_id", session.getId()));
+            if (messages == null || messages.isEmpty()){
+                sessionService.removeById(session.getId());
+            }
+        });
     }
 
     /**
