@@ -19,7 +19,6 @@ public class AddrUtil {
         return response.toString();
     }
     public static void main(String[] args) {
-//        getAddr();
         String address = getAddress("4.234.8.238");
         System.out.println(address);
     }
