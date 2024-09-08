@@ -16,7 +16,7 @@ public class ParametersApiVo {
     private String type="object";
     private Map<String,PropertyDescriptionApiVo> properties = new HashMap<>();
     private List<String> required = new ArrayList<>();
-    private boolean additionalProperties;
+    private boolean additionalProperties = false;
 
     public void addProperty(String name, String type, String description){
         PropertyDescriptionApiVo property = new PropertyDescriptionApiVo();

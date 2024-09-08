@@ -83,8 +83,9 @@ public class Gpt3Util {
         parametersApiVo.addProperty("num","integer","The number of results to return, this number must be in the range 1 to 10");
         parametersApiVo.addProperty("start","integer","The number of result to start with");
         parametersApiVo.addRequired("word");
-        parametersApiVo.setAdditionalProperties(false);
         chatApiVo.addTool("googleSearch","Search on Google", parametersApiVo);
+        parametersApiVo = new ParametersApiVo();
+        chatApiVo.addTool("get-city","Get User's location",parametersApiVo);
     }
 
 
@@ -123,8 +124,8 @@ public class Gpt3Util {
 
     public static void main(String[] args) throws Exception{
         ChatApiVo chatApiVo = new ChatApiVo();
-        chatApiVo.addTextMessage("今天有什么新闻","user");
-        chatApiVo.setModel("gpt-4o-mini");
+        chatApiVo.addTextMessage("你知道我在哪里吗","user");
+        chatApiVo.setModel("gpt-4o");
         Gpt3Util.addUtils(chatApiVo);
         ChatResponse chatResponse = Gpt3Util.chat(chatApiVo);
         System.out.println(chatResponse);
