@@ -20,6 +20,9 @@ public class ModelController {
         list.add("gpt3.5");
         list.add("gpt4");
         list.add("gpt-4o");
+        list.add("gpt-4o-mini");
+        list.add("o1-preview");
+        list.add("o1-mini");
         return Result.success(list);
     }
 

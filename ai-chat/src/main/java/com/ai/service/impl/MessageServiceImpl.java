@@ -101,6 +101,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             case "gpt4" -> model = "gpt-4-turbo";
             case "gpt-4o" -> model = "gpt-4o";
             case "gpt-4o-mini"-> model = "gpt-4o-mini";
+            case "o1-preview"->model = "o1-preview";
+            case "o1-mini" -> model = "o1-mini";
             default -> throw new CustomException("Unrecognised models " + model_);
         }
         return model;
