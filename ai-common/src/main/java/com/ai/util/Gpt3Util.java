@@ -85,7 +85,7 @@ public class Gpt3Util {
         parametersApiVo.addRequired("word");
         chatApiVo.addTool("googleSearch","Search on Google", parametersApiVo);
         parametersApiVo = new ParametersApiVo();
-        chatApiVo.addTool("get-city","Get User's location",parametersApiVo);
+        chatApiVo.addTool("getCity","Get User's location",parametersApiVo);
     }
 
 
