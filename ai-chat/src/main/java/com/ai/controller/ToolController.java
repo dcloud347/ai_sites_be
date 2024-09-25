@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 public class ToolController {
 
     @GetMapping("get-tools")
-    @LoginRequired
     public Result<List<ToolDto>> getTools(){
         List<ToolDto> tools = new ArrayList<>();
         tools.add(new ToolDto().setToolName("googleSearch").setUrl("/chat-service/api/tool/google-search"));
