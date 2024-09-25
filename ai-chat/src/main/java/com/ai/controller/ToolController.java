@@ -1,12 +1,15 @@
 package com.ai.controller;
 
 import com.ai.annotation.LoginRequired;
+import com.ai.dto.ToolDto;
 import com.ai.util.GoogleUtil;
 import com.ai.util.Result;
 import com.ai.util.CommonUtil;
 import com.ai.util.AddrUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +27,15 @@ import javax.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/api/tool")
 public class ToolController {
+
+    @GetMapping("get-tools")
+    @LoginRequired
+    public Result<List<ToolDto>> getTools(){
+        List<ToolDto> tools = new ArrayList<>();
+        tools.add(new ToolDto().setToolName("googleSearch").setUrl("/chat-service/api/tool/google-search"));
+        tools.add(new ToolDto().setToolName("getCity").setUrl("/chat-service/api/tool/get-city"));
+        return Result.success(tools);
+    }
 
     /**
      * 查询我的所有会话记录
