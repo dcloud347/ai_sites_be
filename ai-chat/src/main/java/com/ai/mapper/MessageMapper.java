@@ -2,6 +2,7 @@ package com.ai.mapper;
 
 import com.ai.entity.Message;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @author 
  * @since 2024-03-14
  */
+@Mapper
 public interface MessageMapper extends BaseMapper<Message> {
 
 }

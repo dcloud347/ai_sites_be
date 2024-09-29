@@ -45,7 +45,7 @@ public class LoginAspect {
         try{
             payload = jwtUtil.getPayloadFromJwt(accessToken);
         }catch (ServerException e){
-            throw new CustomException(e.getMessage());
+            throw new CustomException("Access "+e.getMessage());
         }
         if(!payload.getLoginType().equals(LoginType.USER) && !payload.getLoginType().equals(LoginType.ROBOT)){
             throw new CustomException("Permission Denied");

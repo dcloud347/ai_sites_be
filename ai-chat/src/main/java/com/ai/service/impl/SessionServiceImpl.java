@@ -4,6 +4,7 @@ import com.ai.entity.Session;
 import com.ai.mapper.SessionMapper;
 import com.ai.service.ISessionService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -32,6 +33,9 @@ import reactor.util.retry.Retry;
 public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> implements ISessionService {
     private final WebClient webClient;
 
+    @Autowired
+    private SessionMapper sessionMapper;
+
     public SessionServiceImpl(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl("http://ip-api.com").build();
     }
@@ -52,6 +56,10 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, Session> impl
                 });
     }
 
+    @Override
+    public void deleteSessionsWithoutMessages() {
+        sessionMapper.deleteSessionsWithoutMessages();
+    }
 
 
     private LocalDateTime extractTimeZoneFromResponse(String response) throws CustomException{

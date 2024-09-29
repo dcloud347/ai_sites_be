@@ -17,4 +17,5 @@ import java.time.LocalDateTime;
 public interface ISessionService extends IService<Session> {
 
     Mono<LocalDateTime> getTimeZone(String ip);
+    void deleteSessionsWithoutMessages();
 }

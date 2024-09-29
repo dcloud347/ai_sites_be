@@ -85,7 +85,7 @@ public class Gpt3Util {
         parametersApiVo.addRequired("word");
         chatApiVo.addTool("googleSearch","Search on Google", parametersApiVo);
         parametersApiVo = new ParametersApiVo();
-        chatApiVo.addTool("get-city","Get User's location",parametersApiVo);
+        chatApiVo.addTool("getCity","Get User's location(City)",parametersApiVo);
     }
 
 
@@ -124,8 +124,8 @@ public class Gpt3Util {
 
     public static void main(String[] args) throws Exception{
         ChatApiVo chatApiVo = new ChatApiVo();
-        chatApiVo.addTextMessage("你知道我在哪里吗","user");
-        chatApiVo.setModel("gpt-4o");
+        chatApiVo.addTextMessage("给我讲讲欧姆定律","user");
+        chatApiVo.setModel("o1-preview");
         Gpt3Util.addUtils(chatApiVo);
         ChatResponse chatResponse = Gpt3Util.chat(chatApiVo);
         System.out.println(chatResponse);

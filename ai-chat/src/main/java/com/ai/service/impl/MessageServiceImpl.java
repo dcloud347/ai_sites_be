@@ -17,7 +17,6 @@ import com.ai.model.LoginEntity;
 import com.ai.service.IFileService;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
-import com.ai.util.CommonUtil;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
 import com.ai.vo.*;
@@ -37,10 +36,8 @@ import reactor.util.retry.Retry;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -101,6 +98,8 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
             case "gpt4" -> model = "gpt-4-turbo";
             case "gpt-4o" -> model = "gpt-4o";
             case "gpt-4o-mini"-> model = "gpt-4o-mini";
+            case "o1-preview"->model = "o1-preview";
+            case "o1-mini" -> model = "o1-mini";
             default -> throw new CustomException("Unrecognised models " + model_);
         }
         return model;
@@ -245,11 +244,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
         if("fail".equals(jsonObject.get("status").getAsString())){
             throw new CustomException("Local Time Parse Error");
         }
-        String timeZone = jsonObject.get("timezone").getAsString();
-        return timeZone;
+        return jsonObject.get("timezone").getAsString();
     }
     @Override
-    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) throws CustomException {
+    public ResponseEntity<Result<ChatVo>> chat(ChatDto chatDto, HttpServletRequest request) {
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         // 先检查余额是否不足
         Integer surplus = userService.getTokens(loginEntity.getUserId());
