@@ -97,4 +97,16 @@ public class SessionController {
         List<Session> list = sessionService.list(new QueryWrapper<Session>().eq("user_id", id).orderByDesc("id"));
         return Result.success(list);
     }
+
+    /**
+     * 修改会话标题
+     */
+    @PutMapping()
+    @LoginRequired
+    public Result setTitle(@RequestBody Session session){
+        Session session1 = sessionService.getById(session.getId());
+        session1.setTitle(session.getTitle());
+        sessionService.updateById(session1);
+        return Result.success();
+    }
 }

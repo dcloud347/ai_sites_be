@@ -35,4 +35,13 @@ public class UserInfoController {
     public Result<UserInfoVo> userInfo(){
         return userService.userInfo();
     }
+
+    /**
+     * 清除用户数据
+     */
+    @PostMapping("clear")
+    @LoginRequired
+    public Result clear(){
+        return userService.clear();
+    }
 }

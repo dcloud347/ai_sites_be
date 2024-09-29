@@ -46,4 +46,5 @@ public interface IUserService extends IService<User> {
 
     Result<VerifyTokenVo> VerifyToken(VerifyTokenDto verifyTokenDto);
 
+    Result clear();
 }

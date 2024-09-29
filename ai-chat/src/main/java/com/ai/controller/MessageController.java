@@ -76,7 +76,6 @@ public class MessageController {
     public SseEmitter streamChatting(@RequestBody ChatDto chatDto, HttpServletRequest request) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         emitter.onTimeout(emitter::complete);
-
         //构建chatApiVo
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         ChatApiVo chatApiVo = messageService.getChatApiVo(chatDto,loginEntity).setStream(true).setIncludeUsage(true);

@@ -10,6 +10,7 @@ import com.ai.enums.JwtType;
 import com.ai.enums.LoginType;
 import com.ai.exceptions.CustomException;
 import com.ai.exceptions.ServerException;
+import com.ai.feign.SessionService;
 import com.ai.mapper.UserMapper;
 import com.ai.model.LoginEntity;
 import com.ai.model.Payload;
@@ -52,6 +53,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Resource
     private JwtUtil jwtUtil;
 
+    @Resource
+    private SessionService sessionService;
     /**
      *普通用户接口
      */
@@ -183,6 +186,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         verifyTokenVo.setLoginType(payload.getLoginType());
         verifyTokenVo.setAccountId(payload.getAccountId());
         return Result.success(verifyTokenVo);
+    }
+
+    @Override
+    public Result clear() {
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        // 清除聊天记录
+        sessionService.clear(String.valueOf(loginEntity.getUserId()));
+        // 清除个人信息
+        User user = this.getById(loginEntity.getUserId());
+        user.setNick(null).setAvatar_url(null);
+        this.save(user);
+        return Result.success();
     }
 
     /**

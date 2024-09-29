@@ -33,4 +33,12 @@ public class SessionInternalServiceController {
         List<Session> list = sessionService.list(new QueryWrapper<Session>().eq("user_id", id).orderByDesc("id"));
         return Result.success(list);
     }
+
+    /**
+     * 清除某用户的所有会话记录
+     */
+    @DeleteMapping("user/{id}")
+    public void clear(@PathVariable String id){
+        sessionService.remove(new QueryWrapper<Session>().eq("user_id", id).orderByDesc("id"));
+    }
 }
