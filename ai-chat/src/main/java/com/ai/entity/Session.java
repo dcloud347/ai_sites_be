@@ -43,6 +43,7 @@ public class Session implements Serializable {
      * 会话的标题
      */
     private String title;
+    private Boolean archive;
 
     /**
      * 会话开始时间
@@ -51,4 +52,6 @@ public class Session implements Serializable {
 
     @EnumValue
     private Type type;
+
+
 }

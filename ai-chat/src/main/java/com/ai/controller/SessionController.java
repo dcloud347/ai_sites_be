@@ -47,11 +47,11 @@ public class SessionController {
         session.setUserId(loginEntity.getUserId());
         session.setStartTime(LocalDateTime.now());
         session.setType(loginEntity.getType());
+        session.setArchive(false);
         sessionService.save(session);
         map.put("sessionId", session.getId());
         return Result.success(map);
     }
-
     /**
      * 删除指定的session
      */
@@ -79,13 +79,18 @@ public class SessionController {
     }
 
     /**
-     * 修改会话标题
+     * 修改会话标题或者存档
      */
     @PutMapping()
     @LoginRequired
-    public Result setTitle(@RequestBody Session session){
+    public Result update(@RequestBody Session session){
         Session session1 = sessionService.getById(session.getId());
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        if (session1.getUserId() != loginEntity.getUserId()){
+            throw new CustomException("No authority to modify");
+        }
         session1.setTitle(session.getTitle());
+        session1.setArchive(session.getArchive());
         sessionService.updateById(session1);
         return Result.success();
     }

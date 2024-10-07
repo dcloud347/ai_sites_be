@@ -189,7 +189,18 @@ public class MessageController {
         service.shutdown();
         return emitter;
     }
-
+    /**
+     * 查询我的所有存档记录
+     */
+    @GetMapping("archive")
+    @LoginRequired
+    public Result<List<SessionVo>> archive(){
+        List<SessionVo> sessionVos = new ArrayList<>();
+        LoginEntity loginEntity = LoginAspect.threadLocal.get();
+        sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).eq("archive", true).orderByDesc("id"))
+                .forEach(session -> sessionVos.add(new SessionVo(session)));
+        return Result.success(sessionVos);
+    }
     /**
      * 查询我的所有会话记录
      */
@@ -213,7 +224,7 @@ public class MessageController {
             List<SessionVo> last30Days = new ArrayList<>();
             // 查询用户的所有会话，并按 ID 降序排列
             List<SessionVo> sessionVos = new ArrayList<>();
-            sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).orderByDesc("id"))
+            sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).eq("archive", false).orderByDesc("id"))
                     .forEach(session -> sessionVos.add(new SessionVo(session)));
             // 遍历会话列表，将时间转换为用户时区，并进行分类
             for (SessionVo vo : sessionVos) {
