@@ -193,10 +193,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         // 清除聊天记录
         sessionService.clear(String.valueOf(loginEntity.getUserId()));
-        // 清除个人信息
-        User user = this.getById(loginEntity.getUserId());
-        user.setNick(null).setAvatar_url(null);
-        this.save(user);
         return Result.success();
     }
 
