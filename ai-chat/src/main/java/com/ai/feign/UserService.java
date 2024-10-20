@@ -13,4 +13,6 @@ public interface UserService {
     Integer getTokens(@PathVariable Integer id);
     @GetMapping("/internal-service/user/setTokens/{id}")
     void setTokens(@RequestParam Integer tokens, @PathVariable Integer id);
+
+
 }

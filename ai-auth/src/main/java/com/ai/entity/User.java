@@ -5,9 +5,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 import java.time.LocalDate;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.springframework.util.DigestUtils;
 
@@ -23,6 +22,8 @@ import org.springframework.util.DigestUtils;
 @Setter
 @Accessors(chain = true)
 @NoArgsConstructor
+@AllArgsConstructor
+@ToString
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -95,5 +96,10 @@ public class User implements Serializable {
         this.username = username;
         this.email = email;
         this.password = password;
+    }
+
+    public static void main(String[] args) {
+        User user = new User("123", "test@outlook.com", DigestUtils.md5DigestAsHex(("test").getBytes()));
+        System.out.println(user);
     }
 }

@@ -17,6 +17,7 @@ import com.ai.model.LoginEntity;
 import com.ai.service.IFileService;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
+import com.ai.util.CommonUtil;
 import com.ai.util.Gpt3Util;
 import com.ai.util.Result;
 import com.ai.vo.*;
@@ -236,6 +237,27 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message> impl
                     // Handle the error here
                     return Mono.empty();
                 });
+    }
+
+    @Override
+    public Result share(String id) {
+        // 生成code
+        String code = CommonUtil.generateUUID();
+        Session session = sessionService.getById(id);
+        if (session.getUserId() != LoginAspect.threadLocal.get().getUserId()){
+            return Result.error("No right to share");
+        }
+        redisTemplate.opsForValue().set(RedisPrefixEnum.SHARE.getPrefix() + code, id, 7, TimeUnit.DAYS);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("code", code);
+        return Result.success(map);
+    }
+
+    @Override
+    public Result<List<ChatRecordVo>> getShare(String code) {
+        String id = (String) redisTemplate.opsForValue().get(RedisPrefixEnum.SHARE.getPrefix() + code);
+        List<ChatRecordVo> record = this.record(id);
+        return Result.success(record);
     }
 
     private String extractTimeZoneFromResponse(String response) throws CustomException{

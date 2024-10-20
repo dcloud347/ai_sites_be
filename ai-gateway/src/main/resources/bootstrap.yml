@@ -1,22 +1,20 @@
 # 开发环境
-env: d6351e73-a3f5-4d49-88a1-d9b1c49487b6
-# 生产环境
-#env: 8056ed5a-a62c-4aa2-aa9b-615bc6764eb3
+env: dev
 spring:
   application:
     name: ai-gateway
   cloud:
     nacos:
       discovery:
-        server-addr: https://config.acumenbot.ai
+        server-addr: 43.134.23.125:8848
         namespace: ${env}
         username: nacos
-        password: A1dMlna_iL_l28@
+        password: nacos
       #        enabled: false
       config:
-        server-addr: https://config.acumenbot.ai
+        server-addr: 43.134.23.125:8848
         username: nacos
-        password: A1dMlna_iL_l28@
+        password: nacos
         extension-configs[0]:
           data-id: ${spring.application.name}.yml
           group: DEFAULT_GROUP

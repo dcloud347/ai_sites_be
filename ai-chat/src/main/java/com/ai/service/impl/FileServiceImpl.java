@@ -30,8 +30,6 @@ import java.time.LocalDateTime;
 public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IFileService {
     @Resource
     private OssUtils ossUtils = new OssUtils();
-    @Value("${oss.chatting-files}")
-    private String chatting_files_container;
 
     @Override
     public Result<FileVo> uploadFile(MultipartFile file) throws CustomException {
@@ -48,7 +46,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
         }
         String fileName = Id + t;
         String name = loginEntity.getUserId() + "/"  + fileName;
-        String url = ossUtils.uploadFile(file, name, chatting_files_container);
+        String url = ossUtils.uploadFile(file, name);
         File file_ = new File().setId(Id).setFilename(fileName).setCreatedAt(LocalDateTime.now()).setUrl(url);
         file_.setBytes(file.getSize());
         this.save(file_);

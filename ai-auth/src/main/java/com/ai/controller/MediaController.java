@@ -23,17 +23,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/media")
 public class MediaController {
-
     @Resource
     private OssUtils ossUtils;
-
-    @Value("${oss.media}")
-    private String media_container;
-
     /**
      * 上传文件
      */
-
     @PostMapping
     @LoginRequired
     public Result<Map<String, Object>> uploadFile(@RequestParam("file") MultipartFile file){
@@ -41,7 +35,7 @@ public class MediaController {
         // 文件类型
         String t = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
         String name = loginEntity.getUserId() + "/"  + CommonUtil.generateUUID() + t;
-        String url = ossUtils.uploadFile(file, name, media_container);
+        String url = ossUtils.uploadFile(file, name);
         HashMap<String, Object> map = new HashMap<>(1);
         map.put("url", url);
         return Result.success(map);

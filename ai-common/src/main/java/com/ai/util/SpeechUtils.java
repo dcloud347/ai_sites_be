@@ -78,13 +78,14 @@ public class SpeechUtils {
 
     public static void main(String[] args) {
         try{
-            Path audioFilePath = Paths.get("South Way.m4a"); // 替换为你的音频文件路径
-            if(audioFilePath.toFile().exists()){
-                byte[] audioData = Files.readAllBytes(audioFilePath);
-                String result = new SpeechUtils().speechToText(audioData,"whisper-1","m4a");
-                System.out.println(result);
-            }
-
+//            Path audioFilePath = Paths.get("South Way.m4a"); // 替换为你的音频文件路径
+//            if(audioFilePath.toFile().exists()){
+//                byte[] audioData = Files.readAllBytes(audioFilePath);
+//                String result = new SpeechUtils().speechToText(audioData,"whisper-1","m4a");
+//                System.out.println(result);
+//            }
+            byte[] bytes = new SpeechUtils().textToSpeech("hello", "tts-1", "alloy");
+            System.out.println(2);
         } catch (Exception e){
             e.printStackTrace();
         }

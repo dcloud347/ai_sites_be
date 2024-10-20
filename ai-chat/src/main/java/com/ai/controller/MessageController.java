@@ -9,14 +9,13 @@ import com.ai.exceptions.CustomException;
 import com.ai.model.LoginEntity;
 import com.ai.service.IMessageService;
 import com.ai.service.ISessionService;
-import com.ai.util.CommonUtil;
-import com.ai.util.Gpt3Util;
-import com.ai.util.Result;
+import com.ai.util.*;
 import com.ai.vo.*;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -52,7 +51,6 @@ public class MessageController {
 
     @Resource
     private ISessionService sessionService;
-
     /**
      * 发起聊天
      */
@@ -253,7 +251,6 @@ public class MessageController {
         });
     }
 
-
     /**
      * 查询聊天记录
      */
@@ -288,4 +285,32 @@ public class MessageController {
         });
     }
 
+    /**
+     * 分享会话
+     */
+    @PostMapping("share")
+    @LoginRequired
+    public Result share(@RequestParam String id){
+        return messageService.share(id);
+    }
+    /**
+     * 获取分享的会话
+     */
+    @GetMapping("share")
+    public Result<List<ChatRecordVo>> getShare(@RequestParam String code){
+        return messageService.getShare(code);
+    }
+
+    /**
+     * 文字转语音
+     */
+    @GetMapping("text-to-speech")
+    public Result textToSpeech(String text){
+//        byte[] bytes = new SpeechUtils().textToSpeech(text, "tts-1", "alloy");
+//        String url = ossUtils.uploadFile(bytes, "speech/" + CommonUtil.generateUUID() + ".mp4", media_container);
+//        HashMap<String, Object> map = new HashMap<>();
+//        map.put("url", url);
+//        return Result.success(map);
+        return null;
+    }
 }

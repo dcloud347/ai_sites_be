@@ -13,4 +13,4 @@ ADD /target/ai-background-0.0.1-SNAPSHOT.jar background.jar
 
 EXPOSE 8040
 # 运行jar包
-ENTRYPOINT ["java","-jar","/background.jar", "--env=8056ed5a-a62c-4aa2-aa9b-615bc6764eb3"]
+ENTRYPOINT ["java","-jar","/background.jar", "--env=prod"]

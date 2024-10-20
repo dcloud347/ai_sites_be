@@ -41,4 +41,8 @@ public interface IMessageService extends IService<Message> {
                      LoginEntity loginEntity, HttpServletRequest request);
 
     Mono<String> getTimeZone(String ip);
+
+    Result share(String id);
+
+    Result<List<ChatRecordVo>> getShare(String code);
 }

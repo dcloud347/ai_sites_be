@@ -1,47 +1,49 @@
 package com.ai.util;
 
-import com.azure.storage.blob.BlobClient;
-import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.blob.models.BlobErrorCode;
-import com.azure.storage.blob.models.BlobStorageException;
+import com.ai.config.CosConfig;
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.ClientConfig;
+import com.qcloud.cos.auth.BasicCOSCredentials;
+import com.qcloud.cos.auth.COSCredentials;
+import com.qcloud.cos.http.HttpProtocol;
+import com.qcloud.cos.model.ObjectMetadata;
+import com.qcloud.cos.model.PutObjectRequest;
+import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.region.Region;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 @Component
 public class OssUtils {
-    String yourSasToken = "sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2025-05-30T18:33:51Z&st=2024-05-30T10:33:51Z&spr=https&sig=O36ij%2Bc6LxCAOzcg%2BmYZWRzIcJPQwK%2FMZB8ROzKhFd4%3D";
-
-    public String uploadFile(MultipartFile file, String remote_file_name, String container_name) throws BlobStorageException {
-        /* Create a new BlobServiceClient with a SAS Token */
-        BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
-                .endpoint("https://aisiteadmin.blob.core.windows.net")
-                .sasToken(yourSasToken)
-                .buildClient();
-
-        /* Create a new container client */
-        BlobContainerClient containerClient;
+    public String uploadFile(MultipartFile file, String name) {
+        COSCredentials cred = new BasicCOSCredentials(CosConfig.SECRET_ID, CosConfig.SECRET_KEY);
+        Region region = new Region(CosConfig.REGION);
+        ClientConfig clientConfig = new ClientConfig(region);
+        clientConfig.setHttpProtocol(HttpProtocol.https);
+        COSClient cosClient = new COSClient(cred, clientConfig);
+        String bucketName = CosConfig.BUCKET_NAME;
+        InputStream inputStream;
         try {
-            containerClient = blobServiceClient.createBlobContainer(container_name);
-        } catch (BlobStorageException ex) {
-            // The container may already exist, so don't throw an error
-            if (!ex.getErrorCode().equals(BlobErrorCode.CONTAINER_ALREADY_EXISTS)) {
-                throw ex;
-            }else{
-                containerClient = blobServiceClient.getBlobContainerClient(container_name);
-            }
-        }
-
-        /* Upload the file to the container */
-        BlobClient blobClient = containerClient.getBlobClient(remote_file_name);
-        try {
-            blobClient.upload(file.getInputStream(), file.getSize(), true);
+            inputStream = file.getInputStream();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return blobClient.getBlobUrl();
+        // 创建上传Object的Metadata
+        ObjectMetadata meta = new ObjectMetadata();
+        // 必须设置ContentLength
+        try {
+            meta.setContentLength(file.getBytes().length);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        meta.setContentEncoding("UTF-8");
+        PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, name, inputStream, meta);
+        PutObjectResult putObjectResult = cosClient.putObject(putObjectRequest);
+        System.out.println(putObjectResult);
+        return "https://" + CosConfig.BUCKET_NAME + ".cos." + CosConfig.REGION + ".myqcloud.com/" + name;
     }
+
 }

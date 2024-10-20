@@ -36,12 +36,12 @@ public class SessionController {
         HashMap<String, Object> map = new HashMap<>();
         LoginEntity loginEntity = LoginAspect.threadLocal.get();
         // 判断该用户之前是不是有new chat记录
-        List<Session> list = sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).eq("title", "new chat"));
-        if (list != null && !list.isEmpty()){
-            session = list.get(0);
-            map.put("sessionId", session.getId());
-            return Result.success(map);
-        }
+//        List<Session> list = sessionService.list(new QueryWrapper<Session>().eq("user_id", loginEntity.getUserId()).eq("title", "new chat"));
+//        if (list != null && !list.isEmpty()){
+//            session = list.get(0);
+//            map.put("sessionId", session.getId());
+//            return Result.success(map);
+//        }
         session = new Session();
         session.setTitle("new chat");
         session.setUserId(loginEntity.getUserId());

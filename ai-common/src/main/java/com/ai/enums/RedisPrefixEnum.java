@@ -11,7 +11,9 @@ public enum RedisPrefixEnum {
     /**
      * 列表redis中的各种前缀
      */
-    ROBOT_SESSION("robotSession:");
+    ROBOT_SESSION("robotSession:"),
+    // 会话分享
+    SHARE("share:");
     private final String prefix;
 
     RedisPrefixEnum(String prefix) {

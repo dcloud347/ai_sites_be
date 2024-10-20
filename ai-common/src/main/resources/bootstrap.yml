@@ -1,22 +1,19 @@
 # 开发环境
-env: d6351e73-a3f5-4d49-88a1-d9b1c49487b6
+env: dev
 # 生产环境
-#env: 8056ed5a-a62c-4aa2-aa9b-615bc6764eb3
+#env: prod
 spring:
   application:
-    name: ai-auth
+    name: ai-chat
   cloud:
     nacos:
       discovery:
-        server-addr: https://config.acumenbot.ai
+        server-addr: 43.134.23.125:8848
         namespace: ${env}
         username: nacos
-        password: A1dMlna_iL_l28@
-      #        enabled: false
+        password: nacos
       config:
-        server-addr: https://config.acumenbot.ai
-        username: nacos
-        password: A1dMlna_iL_l28@
+        server-addr: 43.134.23.125:8848
         extension-configs[0]:
           data-id: ${spring.application.name}.yml
           group: DEFAULT_GROUP
@@ -25,9 +22,9 @@ spring:
           data-id: common.yml
           group: DEFAULT_GROUP
           refresh: true
-
+        username: nacos
+        password: nacos
         file-extension: yml
         namespace: ${env}
     compatibility-verifier:
       enabled: false
-
